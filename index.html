@@ -22,6 +22,7 @@
         button { background: #2563eb; color: white; border: none; padding: 12px 20px; font-size: 15px; font-weight: bold; border-radius: 8px; cursor: pointer; width: 100%; transition: 0.2s; margin-top: 8px; }
         button.secondary { background: #059669; }
         button.danger { background: #dc2626; }
+        button.warning { background: #d97706; }
         
         .output-box { background: #0f172a; padding: 12px; border-radius: 8px; margin-top: 12px; min-height: 80px; border: 1px solid #334155; font-size: 14px; line-height: 1.5; word-break: break-word; color: #e2e8f0; }
         
@@ -37,10 +38,11 @@
 
         <!-- معلومات جهازك -->
         <div class="section">
-            <h2>📱 معلومات جهازك</h2>
+            <h2>📱 معلومات جهازك ورقمك</h2>
             <div class="info-badge">
-                رقم جوالك: <input type="text" id="myPhone" value="0500000000" onchange="saveMyPhone()" style="background:#1e293b; border:1px solid #475569; color:#38bdf8; padding:4px; width:130px; border-radius:4px; display:inline-block; margin-right:8px;">
-                <br><span id="myIpDisplay" style="font-size: 12px; color: #94a3b8; margin-top:6px; display:block;">عنوان الـ IP المحلي: جاري التحديد...</span>
+                رقم جوالك الشخصي: <input type="text" id="myPhone" placeholder="أدخل رقمك أو اضغط جلب" onchange="saveMyPhone()" style="background:#1e293b; border:1px solid #475569; color:#38bdf8; padding:6px; width:150px; border-radius:6px; display:inline-block; margin-right:8px;">
+                <button class="warning" style="width:auto; padding:6px 12px; font-size:12px; margin-top:0;" onclick="pickMyNumberFromContacts()">📖 جلب رقمي من جهات الاتصال</button>
+                <br><span id="myIpDisplay" style="font-size: 12px; color: #94a3b8; margin-top:8px; display:block;">عنوان الـ IP المحلي: جاري التحديد...</span>
             </div>
         </div>
 
@@ -54,7 +56,10 @@
             <div class="controls">
                 <div class="group"><input type="text" id="contactIp" placeholder="عنوان الـ IP المحلي أو المعرف"></div>
             </div>
-            <button class="secondary" onclick="saveContact()">➕ حفظ جهة الاتصال</button>
+            <div class="controls">
+                <button class="secondary" onclick="pickContactFromPhone()">📇 اختيار من جهات اتصال الهاتف</button>
+                <button onclick="saveContact()">➕ حفظ جهة الاتصال</button>
+            </div>
 
             <h3 style="font-size: 14px; color: #38bdf8; margin-top: 15px;">جهات الاتصال المحفوظة:</h3>
             <div class="output-box" id="contactsList" style="max-height: 130px; overflow-y: auto;">لا توجد جهات اتصال محفوظة بعد.</div>
@@ -104,7 +109,50 @@
             if (p) localStorage.setItem('my_phone_number', p);
         }
 
-        // جهات الاتصال
+        // ميزة الوصول لجهات اتصال هاتف المستخدم (Contact Picker API المدعومة في الجوالات الحديثة)
+        async function pickMyNumberFromContacts() {
+            if (!('contacts' in navigator && 'Picker' in window)) {
+                alert('متصفحك لا يدعم الوصول المباشر لدفتر جهات الاتصال. يمكنك كتابة رقمك يدوياً.');
+                return;
+            }
+            try {
+                const props = ['tel', 'name'];
+                const opts = { multiple: false };
+                const contacts = await navigator.contacts.select(props, opts);
+                if (contacts && contacts.length > 0 && contacts[0].tel && contacts[0].tel.length > 0) {
+                    const phone = contacts[0].tel[0];
+                    document.getElementById('myPhone').value = phone;
+                    saveMyPhone();
+                    alert('تم تعيين رقمك بنجاح: ' + phone);
+                }
+            } catch (ex) {
+                alert('عفواً، تم إلغاء اختيار الاتصال أو لم يتم منح الصلاحية.');
+            }
+        }
+
+        async function pickContactFromPhone() {
+            if (!('contacts' in navigator && 'Picker' in window)) {
+                alert('متصفحك لا يدعم الوصول المباشر لدفتر جهات الاتصال.');
+                return;
+            }
+            try {
+                const props = ['tel', 'name'];
+                const opts = { multiple: false };
+                const contacts = await navigator.contacts.select(props, opts);
+                if (contacts && contacts.length > 0) {
+                    if (contacts[0].name && contacts[0].name.length > 0) {
+                        document.getElementById('contactName').value = contacts[0].name[0];
+                    }
+                    if (contacts[0].tel && contacts[0].tel.length > 0) {
+                        document.getElementById('contactPhone').value = contacts[0].tel[0];
+                    }
+                }
+            } catch (ex) {
+                alert('تعذر جلب جهة الاتصال.');
+            }
+        }
+
+        // حفظ جهات الاتصال يدويًا
         function saveContact() {
             const name = document.getElementById('contactName').value.trim();
             const phone = document.getElementById('contactPhone').value.trim();
@@ -137,7 +185,7 @@
             contacts.forEach((c) => {
                 listDiv.innerHTML += `<div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #334155; padding:8px 0;">
                     <span><b>${c.name}</b> (${c.phone})</span>
-                    <button style="width:auto; padding:6px 12px; font-size:12px;" onclick="dialContact('${c.name}', '${c.ip}')">اتصال</button>
+                    <button style="width:auto; padding:6px 12px; font-size:12px;" onclick="startCall('audio', '${c.ip}')">اتصال</button>
                 </div>`;
             });
         }
@@ -179,10 +227,6 @@
             callStatusText.innerText = `جاري الاتصال بـ: ${ip}`;
             callOverlay.style.display = 'flex';
             startRingingSound();
-        }
-
-        function dialContact(name, ip) {
-            startCall('audio', ip);
         }
 
         function endCall() {
