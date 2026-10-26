@@ -1,268 +1,186 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="ar" dir="rtl" id="htmlRoot">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>P2P Call & Chat Hub - نظام الاتصال والمحادثة</title>
+    <title>P2P Secure Hub</title>
     <style>
-        body { font-family: system-ui, -apple-system, sans-serif; background: #0f172a; color: #fff; padding: 15px; margin: 0; }
-        .container { max-width: 600px; margin: auto; }
-        h1 { text-align: center; font-size: 24px; color: #38bdf8; margin-bottom: 25px; }
+        :root { --bg: #0f172a; --card: #1e293b; --border: #334155; --text: #fff; --primary: #2563eb; --secondary: #059669; --danger: #dc2626; --text-dim: #94a3b8; }
+        body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); padding: 15px; margin: 0; transition: 0.3s; }
+        .container { max-width: 650px; margin: auto; }
         
-        .section { background: #1e293b; padding: 20px; border-radius: 14px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.4); border: 1px solid #334155; }
-        .section h2 { font-size: 18px; margin-top: 0; color: #f8fafc; border-bottom: 1px solid #334155; padding-bottom: 8px; }
+        .header-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        h1 { font-size: 20px; color: #38bdf8; margin: 0; }
+        .lang-btn { background: #334155; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 13px; }
+
+        .section { background: var(--card); padding: 18px; border-radius: 14px; margin-bottom: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.4); border: 1px solid var(--border); }
+        .section h2 { font-size: 16px; margin-top: 0; color: #f8fafc; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
         
-        .controls { display: flex; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
+        .controls { display: flex; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
         .group { flex: 1; min-width: 140px; }
-        label { display: block; font-size: 12px; color: #94a3b8; margin-bottom: 4px; }
+        label { display: block; font-size: 12px; color: var(--text-dim); margin-bottom: 4px; }
         
-        input, textarea { width: 100%; background: #0f172a; color: white; border: 1px solid #475569; padding: 10px; border-radius: 8px; font-size: 14px; box-sizing: border-box; }
-        textarea { resize: vertical; min-height: 80px; }
+        input, textarea { width: 100%; background: var(--bg); color: white; border: 1px solid #475569; padding: 10px; border-radius: 8px; font-size: 14px; box-sizing: border-box; }
+        textarea { resize: vertical; min-height: 60px; }
         
-        button { background: #2563eb; color: white; border: none; padding: 12px 20px; font-size: 15px; font-weight: bold; border-radius: 8px; cursor: pointer; width: 100%; transition: 0.2s; margin-top: 8px; }
-        button.secondary { background: #059669; }
-        button.danger { background: #dc2626; }
-        button.warning { background: #d97706; }
+        button { background: var(--primary); color: white; border: none; padding: 10px 16px; font-size: 14px; font-weight: bold; border-radius: 8px; cursor: pointer; width: 100%; transition: 0.2s; margin-top: 6px; }
+        button.secondary { background: var(--secondary); }
+        button.danger { background: var(--danger); }
         
-        .output-box { background: #0f172a; padding: 12px; border-radius: 8px; margin-top: 12px; min-height: 80px; border: 1px solid #334155; font-size: 14px; line-height: 1.5; word-break: break-word; color: #e2e8f0; }
+        .output-box { background: var(--bg); padding: 10px; border-radius: 8px; margin-top: 10px; min-height: 50px; border: 1px solid var(--border); font-size: 13px; line-height: 1.4; word-break: break-word; color: #e2e8f0; }
         
-        .call-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.95); z-index: 999; flex-direction: column; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; }
-        .call-card { background: #1e293b; padding: 30px; border-radius: 16px; border: 1px solid #475569; text-align: center; width: 100%; max-width: 400px; }
-        .call-card h3 { margin-top: 0; color: #38bdf8; font-size: 22px; }
-        .info-badge { background: #0f172a; padding: 10px 14px; border-radius: 8px; font-size: 14px; color: #38bdf8; border: 1px solid #334155; margin-bottom: 15px; }
+        /* شاشة المكالمة أو الرنين */
+        .call-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.96); z-index: 999; flex-direction: column; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; }
+        .call-card { background: var(--card); padding: 25px; border-radius: 16px; border: 1px solid #475569; text-align: center; width: 100%; max-width: 380px; box-shadow: 0 10px 30px rgba(0,0,0,0.6); }
+        .call-card h3 { margin-top: 0; color: #38bdf8; font-size: 20px; }
+        .info-badge { background: var(--bg); padding: 8px 12px; border-radius: 6px; font-size: 13px; color: #38bdf8; border: 1px solid var(--border); margin-bottom: 10px; }
+        
+        .contact-item { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding: 8px 0; }
+        .contact-item span { cursor: pointer; }
+        .contact-item span:hover { color: #38bdf8; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>P2P Call & Chat Hub</h1>
+        <div class="header-bar">
+            <h1 id="uiTitle">P2P Secure Hub</h1>
+            <button class="lang-btn" onclick="toggleLanguage()" id="langToggleBtn">English</button>
+        </div>
 
         <!-- معلومات جهازك -->
         <div class="section">
-            <h2>📱 معلومات جهازك ورقمك</h2>
+            <h2 id="secInfoTitle">📱 معلومات جهازك ومعرف الاتصال</h2>
             <div class="info-badge">
-                رقم جوالك الشخصي: <input type="text" id="myPhone" placeholder="أدخل رقمك أو اضغط جلب" onchange="saveMyPhone()" style="background:#1e293b; border:1px solid #475569; color:#38bdf8; padding:6px; width:150px; border-radius:6px; display:inline-block; margin-right:8px;">
-                <button class="warning" style="width:auto; padding:6px 12px; font-size:12px; margin-top:0;" onclick="pickMyNumberFromContacts()">📖 جلب رقمي من جهات الاتصال</button>
-                <br><span id="myIpDisplay" style="font-size: 12px; color: #94a3b8; margin-top:8px; display:block;">عنوان الـ IP المحلي: جاري التحديد...</span>
+                <span id="txtMyPhoneLbl">رقم جوالك:</span> <input type="text" id="myPhone" placeholder="05xxxxxxxx" onchange="saveMyPhone()" style="background:#1e293b; border:1px solid #475569; color:#38bdf8; padding:4px; width:120px; border-radius:4px; display:inline-block; margin-right:6px;">
+                <br><span id="myPeerIdDisplay" style="font-size: 11px; color: var(--text-dim); margin-top:6px; display:block;">معرف الاتصال الخاص بك: جاري التوليد...</span>
             </div>
         </div>
 
-        <!-- إدارة جهات الاتصال -->
+        <!-- دفتر جهات الاتصال -->
         <div class="section">
-            <h2>👥 دفتر جهات الاتصال</h2>
+            <h2 id="secContactsTitle">👥 جهات الاتصال</h2>
             <div class="controls">
-                <div class="group"><input type="text" id="contactName" placeholder="اسم الشخص (زوجتي / زميل)"></div>
-                <div class="group"><input type="text" id="contactPhone" placeholder="رقم الجوال"></div>
+                <div class="group"><input type="text" id="contactName" placeholder="اسم الشخص (مثلاً: زوجتي)"></div>
+                <div class="group"><input type="text" id="contactPeerId" placeholder="معرف الطرف الآخر (Peer ID)"></div>
             </div>
-            <div class="controls">
-                <div class="group"><input type="text" id="contactIp" placeholder="عنوان الـ IP المحلي أو المعرف"></div>
-            </div>
-            <div class="controls">
-                <button class="secondary" onclick="pickContactFromPhone()">📇 اختيار من جهات اتصال الهاتف</button>
-                <button onclick="saveContact()">➕ حفظ جهة الاتصال</button>
-            </div>
+            <button class="secondary" onclick="saveContact()" id="btnSaveContact">➕ حفظ جهة الاتصال</button>
 
-            <h3 style="font-size: 14px; color: #38bdf8; margin-top: 15px;">جهات الاتصال المحفوظة:</h3>
-            <div class="output-box" id="contactsList" style="max-height: 130px; overflow-y: auto;">لا توجد جهات اتصال محفوظة بعد.</div>
+            <div class="output-box" id="contactsList" style="max-height: 110px; overflow-y: auto; margin-top: 10px;">لا توجد جهات اتصال محفوظة.</div>
         </div>
 
         <!-- مركز المكالمات -->
         <div class="section">
-            <h2>📞 الاتصال الصوتي والمرئي</h2>
+            <h2 id="secCallTitle">📞 الاتصال المباشر</h2>
             <div class="controls">
-                <button onclick="startCall('audio')">📞 اتصال صوتي (مع نغمة رنين)</button>
-                <button class="secondary" onclick="startCall('video')">📹 اتصال فيديو</button>
+                <div class="group">
+                    <input type="text" id="targetPeerInput" placeholder="أدخل معرف الطرف الآخر للاتصال">
+                </div>
+            </div>
+            <div class="controls">
+                <button onclick="startCall('audio')" id="btnAudioCall">📞 اتصال صوتي</button>
+                <button class="secondary" onclick="startCall('video')" id="btnVideoCall">📹 اتصال فيديو</button>
             </div>
         </div>
 
-        <!-- المحادثة الفورية وتبادل الصور -->
+        <!-- المحادثة الفورية المعزولة -->
         <div class="section">
-            <h2>💬 المحادثة الفورية وتبادل الصور</h2>
-            <textarea id="chatInput" placeholder="اكتب رسالة نصية..."></textarea>
-            <input type="file" id="imageInput" accept="image/*" style="margin-top: 10px;">
-            <button onclick="sendChatMessage()" style="margin-top: 10px;">📤 إرسال رسالة أو صورة</button>
+            <h2 id="secChatTitle">💬 المحادثة الفورية مع: <span id="activeChatName" style="color:#38bdf8;">العام (الكل)</span></h2>
+            <textarea id="chatInput" placeholder="اكتب رسالة..."></textarea>
+            <input type="file" id="imageInput" accept="image/*" style="margin-top: 8px;">
+            <button onclick="sendChatMessage()" style="margin-top: 8px;" id="btnSend">📤 إرسال رسالة أو صورة</button>
 
-            <div class="output-box" id="chatHistory" style="margin-top: 15px; max-height: 180px; overflow-y: auto;">سجل المحادثة فارغ...</div>
+            <div class="output-box" id="chatHistory" style="max-height: 160px; overflow-y: auto; margin-top: 10px;">اختر جهة اتصال لبدء محادثة خاصة ومغلقة...</div>
         </div>
     </div>
 
-    <!-- شاشة الاتصال النشط أو الرنين -->
+    <!-- شاشة الاتصال النشط أو الرنين (تفاعلية مع خيار الحفظ السريع) -->
     <div class="call-overlay" id="callOverlay">
         <div class="call-card">
-            <h3 id="callTitle">جاري الاتصال...</h3>
-            <p id="callStatusText" style="color: #94a3b8; font-size: 14px; margin-bottom: 20px;">يرجى الانتظار...</p>
-            <button class="danger" onclick="endCall()">🔴 إنهاء المكالمة</button>
+            <h3 id="callTitle">مكالمة واردة...</h3>
+            <p id="callStatusText" style="color: var(--text-dim); font-size: 13px; margin-bottom: 15px;">يرجى الانتظار...</p>
+            
+            <div id="incomingActions" style="display:none; margin-bottom: 15px;">
+                <button class="secondary" onclick="acceptIncomingCall()" style="margin-bottom:6px;" id="btnAccept">🟢 قبول المكالمة</button>
+                <button class="warning" onclick="quickSaveCaller()" style="background:#d97706; margin-bottom:6px;" id="btnQuickSave">➕ حفظ المتصل في جهات الاتصال</button>
+            </div>
+            
+            <button class="danger" onclick="endCall()" id="btnEndCall">🔴 إنهاء المكالمة</button>
         </div>
     </div>
 
+    <!-- استدعاء مكتبة PeerJS للاتصال الحقيقي عبر P2P -->
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <script>
-        // إعدادات رقم الجوال والـ IP
-        window.addEventListener('DOMContentLoaded', () => {
-            const savedPhone = localStorage.getItem('my_phone_number');
-            if (savedPhone) document.getElementById('myPhone').value = savedPhone;
+        let currentLang = 'ar';
+        let peer = null;
+        let activePeerId = null;
+        let incomingCallerId = null;
+        let currentCall = null;
+        let selectedContactName = "العام";
+
+        // النصوص المترجمة للتطبيق
+        const translations = {
+            ar: {
+                title: "P2P Secure Hub",
+                langBtn: "English",
+                secInfo: "📱 معلومات جهازك ومعرف الاتصال",
+                phoneLbl: "رقم جوالك:",
+                peerIdDisp: "معرف الاتصال الخاص بك: جاري التوليد...",
+                secContacts: "👥 جهات الاتصال",
+                namePh: "اسم الشخص (مثلاً: زوجتي)",
+                peerPh: "معرف الطرف الآخر (Peer ID)",
+                saveContact: "➕ حفظ جهة الاتصال",
+                secCall: "📞 الاتصال المباشر",
+                targetPh: "أدخل معرف الطرف الآخر للاتصال",
+                audioCall: "📞 اتصال صوتي",
+                videoCall: "📹 اتصال فيديو",
+                chatTitle: "💬 المحادثة الفورية مع: ",
+                chatPh: "اكتب رسالة...",
+                sendBtn: "📤 إرسال رسالة أو صورة",
+                noContacts: "لا توجد جهات اتصال محفوظة.",
+                callIncoming: "مكالمة واردة من: ",
+                callOutgoing: "جاري الاتصال...",
+                acceptBtn: "🟢 قبول المكالمة",
+                quickSaveBtn: "➕ حفظ المتصل في جهات الاتصال",
+                endCallBtn: "🔴 إنهاء المكالمة"
+            },
+            en: {
+                title: "P2P Secure Hub",
+                langBtn: "العربية",
+                secInfo: "📱 Your Device & Connection ID",
+                phoneLbl: "Your Phone:",
+                peerIdDisp: "Your Peer ID: Generating...",
+                secContacts: "👥 Contacts",
+                namePh: "Contact Name (e.g. Wife)",
+                peerPh: "Peer ID of other party",
+                saveContact: "➕ Save Contact",
+                secCall: "📞 Direct Call",
+                targetPh: "Enter Peer ID to call",
+                audioCall: "📞 Audio Call",
+                videoCall: "📹 Video Call",
+                chatTitle: "💬 Instant Chat with: ",
+                chatPh: "Type a message...",
+                sendBtn: "📤 Send Message or Image",
+                noContacts: "No saved contacts.",
+                callIncoming: "Incoming call from: ",
+                callOutgoing: "Calling...",
+                acceptBtn: "🟢 Accept Call",
+                quickSaveBtn: "➕ Save Caller to Contacts",
+                endCallBtn: "🔴 End Call"
+            }
+        };
+
+        function toggleLanguage() {
+            currentLang = currentLang === 'ar' ? 'en' : 'ar';
+            const html = document.getElementById('htmlRoot');
+            html.setAttribute('dir', currentLang === 'ar' ? 'rtl' : 'ltr');
+            html.setAttribute('lang', currentLang);
             
-            document.getElementById('myIpDisplay').innerText = `عنوان الـ IP المحلي: 192.168.1.` + Math.floor(Math.random() * 190 + 10);
-            loadContacts();
-        });
-
-        function saveMyPhone() {
-            const p = document.getElementById('myPhone').value.trim();
-            if (p) localStorage.setItem('my_phone_number', p);
-        }
-
-        // ميزة الوصول لجهات اتصال هاتف المستخدم (Contact Picker API المدعومة في الجوالات الحديثة)
-        async function pickMyNumberFromContacts() {
-            if (!('contacts' in navigator && 'Picker' in window)) {
-                alert('متصفحك لا يدعم الوصول المباشر لدفتر جهات الاتصال. يمكنك كتابة رقمك يدوياً.');
-                return;
-            }
-            try {
-                const props = ['tel', 'name'];
-                const opts = { multiple: false };
-                const contacts = await navigator.contacts.select(props, opts);
-                if (contacts && contacts.length > 0 && contacts[0].tel && contacts[0].tel.length > 0) {
-                    const phone = contacts[0].tel[0];
-                    document.getElementById('myPhone').value = phone;
-                    saveMyPhone();
-                    alert('تم تعيين رقمك بنجاح: ' + phone);
-                }
-            } catch (ex) {
-                alert('عفواً، تم إلغاء اختيار الاتصال أو لم يتم منح الصلاحية.');
-            }
-        }
-
-        async function pickContactFromPhone() {
-            if (!('contacts' in navigator && 'Picker' in window)) {
-                alert('متصفحك لا يدعم الوصول المباشر لدفتر جهات الاتصال.');
-                return;
-            }
-            try {
-                const props = ['tel', 'name'];
-                const opts = { multiple: false };
-                const contacts = await navigator.contacts.select(props, opts);
-                if (contacts && contacts.length > 0) {
-                    if (contacts[0].name && contacts[0].name.length > 0) {
-                        document.getElementById('contactName').value = contacts[0].name[0];
-                    }
-                    if (contacts[0].tel && contacts[0].tel.length > 0) {
-                        document.getElementById('contactPhone').value = contacts[0].tel[0];
-                    }
-                }
-            } catch (ex) {
-                alert('تعذر جلب جهة الاتصال.');
-            }
-        }
-
-        // حفظ جهات الاتصال يدويًا
-        function saveContact() {
-            const name = document.getElementById('contactName').value.trim();
-            const phone = document.getElementById('contactPhone').value.trim();
-            const ip = document.getElementById('contactIp').value.trim();
-
-            if (!name || !phone || !ip) {
-                alert('الرجاء إدخال الاسم ورقم الجوال وعنوان الـ IP.');
-                return;
-            }
-
-            let contacts = JSON.parse(localStorage.getItem('p2p_contacts') || '[]');
-            contacts.push({ name, phone, ip });
-            localStorage.setItem('p2p_contacts', JSON.stringify(contacts));
-
-            document.getElementById('contactName').value = '';
-            document.getElementById('contactPhone').value = '';
-            document.getElementById('contactIp').value = '';
-            loadContacts();
-            alert('تم حفظ جهة الاتصال بنجاح!');
-        }
-
-        function loadContacts() {
-            const listDiv = document.getElementById('contactsList');
-            let contacts = JSON.parse(localStorage.getItem('p2p_contacts') || '[]');
-            if (contacts.length === 0) {
-                listDiv.innerText = 'لا توجد جهات اتصال محفوظة بعد.';
-                return;
-            }
-            listDiv.innerHTML = '';
-            contacts.forEach((c) => {
-                listDiv.innerHTML += `<div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #334155; padding:8px 0;">
-                    <span><b>${c.name}</b> (${c.phone})</span>
-                    <button style="width:auto; padding:6px 12px; font-size:12px;" onclick="startCall('audio', '${c.ip}')">اتصال</button>
-                </div>`;
-            });
-        }
-
-        // نظام نغمة الرنين
-        let audioCtx = null, ringInterval = null;
-        function startRingingSound() {
-            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            if (audioCtx.state === 'suspended') audioCtx.resume();
-            ringInterval = setInterval(() => {
-                if (!audioCtx) return;
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(440, audioCtx.currentTime);
-                osc.frequency.setValueAtTime(480, audioCtx.currentTime + 0.2);
-                gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 1.2);
-                osc.connect(gain);
-                gain.connect(audioCtx.destination);
-                osc.start();
-                osc.stop(audioCtx.currentTime + 1.2);
-            }, 2500);
-        }
-        function stopRingingSound() { if (ringInterval) { clearInterval(ringInterval); ringInterval = null; } }
-
-        // المكالمات
-        const callOverlay = document.getElementById('callOverlay');
-        const callTitle = document.getElementById('callTitle');
-        const callStatusText = document.getElementById('callStatusText');
-
-        function startCall(type, targetIp) {
-            let ip = targetIp;
-            if (!ip) {
-                ip = prompt('أدخل عنوان الـ IP للطرف المقابل أو رقم الجوال:');
-                if (!ip) return;
-            }
-            callTitle.innerText = type === 'audio' ? '📞 اتصال صوتي جارٍ...' : '📹 اتصال فيديو جارٍ...';
-            callStatusText.innerText = `جاري الاتصال بـ: ${ip}`;
-            callOverlay.style.display = 'flex';
-            startRingingSound();
-        }
-
-        function endCall() {
-            stopRingingSound();
-            callOverlay.style.display = 'none';
-        }
-
-        // المحادثة وتبادل الصور
-        function sendChatMessage() {
-            const msg = document.getElementById('chatInput').value.trim();
-            const fileInput = document.getElementById('imageInput');
-            const history = document.getElementById('chatHistory');
-            
-            if (!msg && fileInput.files.length === 0) {
-                alert('اكتب رسالة أو اختر صورة.');
-                return;
-            }
-            if (history.innerText.includes('سجل المحادثة فارغ')) history.innerText = '';
-            
-            const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            
-            if (msg) {
-                history.innerHTML += `<div><b>أنت (${time}):</b> ${msg}</div>`;
-                document.getElementById('chatInput').value = '';
-            }
-            
-            if (fileInput.files.length > 0) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    history.innerHTML += `<div><b>أنت (${time}) [صورة]:</b><br><img src="${e.target.result}" style="max-width: 140px; border-radius: 6px; margin-top: 4px;"></div>`;
-                    fileInput.value = '';
-                };
-                reader.readAsDataURL(fileInput.files[0]);
-            }
-            history.scrollTop = history.scrollHeight;
-        }
-    </script>
-</body>
-</html>
+            const t = translations[currentLang];
+            document.getElementById('uiTitle').innerText = t.title;
+            document.getElementById('langToggleBtn').innerText = t.langBtn;
+            document.getElementById('secInfoTitle').innerText = t.secInfo;
+            document.getElementById('txtMyPhoneLbl').innerText = t.phoneLbl;
+            document.getElementById('secContactsTitle').innerText = t.secContacts;
+            document.getElementById('contactName').placeholder = t.namePh;
+            document.getElementById('contactPeerId').placeholder
