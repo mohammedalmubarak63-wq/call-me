@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VoiceLinguist & P2P Hub</title>
+    <title>P2P Call & Chat Hub - نظام الاتصال والمحادثة</title>
     <style>
         body { font-family: system-ui, -apple-system, sans-serif; background: #0f172a; color: #fff; padding: 15px; margin: 0; }
-        .container { max-width: 650px; margin: auto; }
-        h1 { text-align: center; font-size: 22px; color: #38bdf8; margin-bottom: 20px; }
+        .container { max-width: 600px; margin: auto; }
+        h1 { text-align: center; font-size: 24px; color: #38bdf8; margin-bottom: 25px; }
         
         .section { background: #1e293b; padding: 20px; border-radius: 14px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.4); border: 1px solid #334155; }
         .section h2 { font-size: 18px; margin-top: 0; color: #f8fafc; border-bottom: 1px solid #334155; padding-bottom: 8px; }
@@ -16,118 +16,71 @@
         .group { flex: 1; min-width: 140px; }
         label { display: block; font-size: 12px; color: #94a3b8; margin-bottom: 4px; }
         
-        select, textarea, input { width: 100%; background: #0f172a; color: white; border: 1px solid #475569; padding: 10px; border-radius: 8px; font-size: 14px; box-sizing: border-box; }
-        textarea { resize: vertical; min-height: 70px; }
+        input, textarea { width: 100%; background: #0f172a; color: white; border: 1px solid #475569; padding: 10px; border-radius: 8px; font-size: 14px; box-sizing: border-box; }
+        textarea { resize: vertical; min-height: 80px; }
         
         button { background: #2563eb; color: white; border: none; padding: 12px 20px; font-size: 15px; font-weight: bold; border-radius: 8px; cursor: pointer; width: 100%; transition: 0.2s; margin-top: 8px; }
-        button.recording { background: #dc2626; animation: pulse 1.5s infinite; }
         button.secondary { background: #059669; }
         button.danger { background: #dc2626; }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
         
-        .output-box { background: #0f172a; padding: 12px; border-radius: 8px; margin-top: 12px; min-height: 60px; border: 1px solid #334155; font-size: 15px; line-height: 1.5; word-break: break-word; color: #e2e8f0; }
-        .status { font-size: 12px; color: #94a3b8; margin-top: 6px; text-align: center; }
+        .output-box { background: #0f172a; padding: 12px; border-radius: 8px; margin-top: 12px; min-height: 80px; border: 1px solid #334155; font-size: 14px; line-height: 1.5; word-break: break-word; color: #e2e8f0; }
         
         .call-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.95); z-index: 999; flex-direction: column; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; }
         .call-card { background: #1e293b; padding: 30px; border-radius: 16px; border: 1px solid #475569; text-align: center; width: 100%; max-width: 400px; }
-        .call-card h3 { margin-top: 0; color: #38bdf8; font-size: 20px; }
-        .info-badge { background: #0f172a; padding: 8px 12px; border-radius: 6px; font-size: 13px; color: #38bdf8; border: 1px solid #334155; margin-bottom: 12px; }
+        .call-card h3 { margin-top: 0; color: #38bdf8; font-size: 22px; }
+        .info-badge { background: #0f172a; padding: 10px 14px; border-radius: 8px; font-size: 14px; color: #38bdf8; border: 1px solid #334155; margin-bottom: 15px; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>VoiceLinguist & P2P Hub</h1>
+        <h1>P2P Call & Chat Hub</h1>
 
-        <!-- ================= القسم الأول: التفريغ الصوتي ================= -->
+        <!-- معلومات جهازك -->
         <div class="section">
-            <h2>1️⃣ قسم تحويل الصوت إلى نص مكتوب</h2>
-            <div class="controls">
-                <div class="group">
-                    <label>لغة التحدث:</label>
-                    <select id="sttLang">
-                        <option value="ar-SA">العربية (Saudi Arabia)</option>
-                        <option value="ur-PK">اردو (Urdu)</option>
-                        <option value="en-US">English (US)</option>
-                        <option value="hi-IN">हिन्दी (Hindi)</option>
-                        <option value="fr-FR">Français</option>
-                    </select>
-                </div>
-            </div>
-            <button id="sttBtn" onclick="toggleSTT()">🎤 ابدأ التسجيل الصوتي</button>
-            <div class="status" id="sttStatus">جاهز...</div>
-            <div class="output-box" id="sttOutput">النص المكتوب سيظهر هنا...</div>
-        </div>
-
-        <!-- ================= القسم الثاني: الترجمة الفورية ================= -->
-        <div class="section">
-            <h2>2️⃣ قسم الترجمة الفورية (كتابة + صوت + نطق)</h2>
-            <div class="controls">
-                <div class="group">
-                    <label>من لغة:</label>
-                    <select id="transSource">
-                        <option value="ar">العربية</option>
-                        <option value="ur">اردو (Urdu)</option>
-                        <option value="en">English</option>
-                        <option value="hi">हिन्दी</option>
-                    </select>
-                </div>
-                <div class="group">
-                    <label>إلى لغة:</label>
-                    <select id="transTarget">
-                        <option value="en">English</option>
-                        <option value="ar">العربية</option>
-                        <option value="ur">اردو (Urdu)</option>
-                        <option value="hi">हिन्दी</option>
-                    </select>
-                </div>
-            </div>
-            <textarea id="transInput" placeholder="اكتب النص للترجمة أو تحدث..." oninput="doTranslation()"></textarea>
-            <button id="transMicBtn" onclick="toggleTranslationVoice()">🎤 إدخال صوتي للترجمة</button>
-            <div class="status" id="transStatus">جاهز...</div>
-            <div class="output-box" id="transOutput">الترجمة ستظهر هنا...</div>
-            <button class="secondary" onclick="speakTranslation()">🔊 استماع للترجمة</button>
-        </div>
-
-        <!-- ================= القسم الثالث: مركز الاتصالات وجهات الاتصال ================= -->
-        <div class="section">
-            <h2>3️⃣ مركز الاتصالات وجهات الاتصال</h2>
-            
-            <!-- إعداد رقم جوالك الشخصي -->
+            <h2>📱 معلومات جهازك</h2>
             <div class="info-badge">
-                📱 رقم جوالك الحالي: <input type="text" id="myPhone" value="0500000000" onchange="saveMyPhone()" style="background:#1e293b; border:1px solid #475569; color:#38bdf8; padding:4px; width:130px; border-radius:4px; display:inline-block;">
-                <br><span id="myIpDisplay" style="font-size: 11px; color: #94a3b8;">عنوان IP الخاص بك: جاري التحديد...</span>
+                رقم جوالك: <input type="text" id="myPhone" value="0500000000" onchange="saveMyPhone()" style="background:#1e293b; border:1px solid #475569; color:#38bdf8; padding:4px; width:130px; border-radius:4px; display:inline-block; margin-right:8px;">
+                <br><span id="myIpDisplay" style="font-size: 12px; color: #94a3b8; margin-top:6px; display:block;">عنوان الـ IP المحلي: جاري التحديد...</span>
             </div>
+        </div>
 
-            <!-- إضافة جهة اتصال جديدة -->
-            <h3 style="font-size: 15px; color: #38bdf8; margin-top: 15px;">إضافة جهة اتصال جديدة</h3>
+        <!-- إدارة جهات الاتصال -->
+        <div class="section">
+            <h2>👥 دفتر جهات الاتصال</h2>
             <div class="controls">
-                <div class="group"><input type="text" id="contactName" placeholder="اسم الشخص (مثلاً: زوجتي / زميل)"></div>
+                <div class="group"><input type="text" id="contactName" placeholder="اسم الشخص (زوجتي / زميل)"></div>
                 <div class="group"><input type="text" id="contactPhone" placeholder="رقم الجوال"></div>
             </div>
             <div class="controls">
-                <div class="group"><input type="text" id="contactIp" placeholder="عنوان الـ IP المحلي أو معرف الاتصال"></div>
+                <div class="group"><input type="text" id="contactIp" placeholder="عنوان الـ IP المحلي أو المعرف"></div>
             </div>
-            <button class="secondary" onclick="saveContact()">➕ حفظ في جهات الاتصال</button>
+            <button class="secondary" onclick="saveContact()">➕ حفظ جهة الاتصال</button>
 
-            <!-- قائمة الاتصال السريع -->
-            <h3 style="font-size: 15px; color: #38bdf8; margin-top: 20px;">جهات الاتصال المحفوظة (الاتصال بضغطة زر)</h3>
-            <div class="output-box" id="contactsList" style="max-height: 120px; overflow-y: auto; margin-bottom: 15px;">لا توجد جهات اتصال محفوظة بعد.</div>
+            <h3 style="font-size: 14px; color: #38bdf8; margin-top: 15px;">جهات الاتصال المحفوظة:</h3>
+            <div class="output-box" id="contactsList" style="max-height: 130px; overflow-y: auto;">لا توجد جهات اتصال محفوظة بعد.</div>
+        </div>
 
+        <!-- مركز المكالمات -->
+        <div class="section">
+            <h2>📞 الاتصال الصوتي والمرئي</h2>
             <div class="controls">
-                <button onclick="startCallFromInput('audio')">📞 اتصال صوتي</button>
-                <button class="secondary" onclick="startCallFromInput('video')">📹 اتصال فيديو</button>
+                <button onclick="startCall('audio')">📞 اتصال صوتي (مع نغمة رنين)</button>
+                <button class="secondary" onclick="startCall('video')">📹 اتصال فيديو</button>
             </div>
+        </div>
 
-            <label style="margin-top: 15px; display:block;">محادثة فورية وتبادل صور:</label>
-            <textarea id="chatInput" placeholder="اكتب رسالة..."></textarea>
-            <input type="file" id="imageInput" accept="image/*" style="margin-top: 8px;">
-            <button onclick="sendChatMessage()">📤 إرسال رسالة أو صورة</button>
+        <!-- المحادثة الفورية وتبادل الصور -->
+        <div class="section">
+            <h2>💬 المحادثة الفورية وتبادل الصور</h2>
+            <textarea id="chatInput" placeholder="اكتب رسالة نصية..."></textarea>
+            <input type="file" id="imageInput" accept="image/*" style="margin-top: 10px;">
+            <button onclick="sendChatMessage()" style="margin-top: 10px;">📤 إرسال رسالة أو صورة</button>
 
-            <div class="output-box" id="chatHistory" style="margin-top: 15px; max-height: 150px; overflow-y: auto;">سجل المحادثة فارغ...</div>
+            <div class="output-box" id="chatHistory" style="margin-top: 15px; max-height: 180px; overflow-y: auto;">سجل المحادثة فارغ...</div>
         </div>
     </div>
 
-    <!-- شاشة الاتصال أو الرنين -->
+    <!-- شاشة الاتصال النشط أو الرنين -->
     <div class="call-overlay" id="callOverlay">
         <div class="call-card">
             <h3 id="callTitle">جاري الاتصال...</h3>
@@ -137,20 +90,13 @@
     </div>
 
     <script>
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-
-        // استرجاع وحفظ رقم الجوال الشخصي
+        // إعدادات رقم الجوال والـ IP
         window.addEventListener('DOMContentLoaded', () => {
             const savedPhone = localStorage.getItem('my_phone_number');
             if (savedPhone) document.getElementById('myPhone').value = savedPhone;
             
-            // توليد/جلب IP وهمي محلي للعرض
-            document.getElementById('myIpDisplay').innerText = `عنوان الـ IP المحلي: 192.168.1.` + Math.floor(Math.random() * 200 + 10);
+            document.getElementById('myIpDisplay').innerText = `عنوان الـ IP المحلي: 192.168.1.` + Math.floor(Math.random() * 190 + 10);
             loadContacts();
-            
-            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-                navigator.mediaDevices.getUserMedia({ audio: true }).then(s => s.getTracks().forEach(t => t.stop())).catch(()=>{});
-            }
         });
 
         function saveMyPhone() {
@@ -158,14 +104,14 @@
             if (p) localStorage.setItem('my_phone_number', p);
         }
 
-        // --- إدارة جهات الاتصال ---
+        // جهات الاتصال
         function saveContact() {
             const name = document.getElementById('contactName').value.trim();
             const phone = document.getElementById('contactPhone').value.trim();
             const ip = document.getElementById('contactIp').value.trim();
 
             if (!name || !phone || !ip) {
-                alert('الرجاء إكمال بيانات جهة الاتصال (الاسم، رقم الجوال، والـ IP).');
+                alert('الرجاء إدخال الاسم ورقم الجوال وعنوان الـ IP.');
                 return;
             }
 
@@ -188,31 +134,15 @@
                 return;
             }
             listDiv.innerHTML = '';
-            contacts.forEach((c, index) => {
-                listDiv.innerHTML += `<div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #334155; padding:6px 0;">
-                    <span><b>${c.name}</b> (${c.phone}) - [IP: ${c.ip}]</span>
-                    <button style="width:auto; padding:4px 10px; font-size:12px;" onclick="dialContact('${c.ip}')">اتصال</button>
+            contacts.forEach((c) => {
+                listDiv.innerHTML += `<div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #334155; padding:8px 0;">
+                    <span><b>${c.name}</b> (${c.phone})</span>
+                    <button style="width:auto; padding:6px 12px; font-size:12px;" onclick="dialContact('${c.name}', '${c.ip}')">اتصال</button>
                 </div>`;
             });
         }
 
-        function dialContact(ip) {
-            startCall('audio', ip);
-        }
-
-        function startCallFromInput(type) {
-            const phoneInput = prompt('أدخل رقم الجوال أو اختر من جهات الاتصال المحفوظة:');
-            if (!phoneInput) return;
-            let contacts = JSON.parse(localStorage.getItem('p2p_contacts') || '[]');
-            const found = contacts.find(c => c.phone === phoneInput || c.name.includes(phoneInput));
-            if (found) {
-                startCall(type, found.ip);
-            } else {
-                alert('الرقم غير موجود في جهات الاتصال المحفوظة. يرجى إضافته أولاً.');
-            }
-        }
-
-        // --- نغمة الرنين ---
+        // نظام نغمة الرنين
         let audioCtx = null, ringInterval = null;
         function startRingingSound() {
             if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -234,76 +164,60 @@
         }
         function stopRingingSound() { if (ringInterval) { clearInterval(ringInterval); ringInterval = null; } }
 
-        // --- الاتصالات والشات ---
+        // المكالمات
         const callOverlay = document.getElementById('callOverlay');
         const callTitle = document.getElementById('callTitle');
         const callStatusText = document.getElementById('callStatusText');
 
-        function startCall(type, ip) {
+        function startCall(type, targetIp) {
+            let ip = targetIp;
+            if (!ip) {
+                ip = prompt('أدخل عنوان الـ IP للطرف المقابل أو رقم الجوال:');
+                if (!ip) return;
+            }
             callTitle.innerText = type === 'audio' ? '📞 اتصال صوتي جارٍ...' : '📹 اتصال فيديو جارٍ...';
-            callStatusText.innerText = `جاري الاتصال بالعنوان: ${ip}`;
+            callStatusText.innerText = `جاري الاتصال بـ: ${ip}`;
             callOverlay.style.display = 'flex';
             startRingingSound();
         }
 
-        function endCall() { stopRingingSound(); callOverlay.style.display = 'none'; }
+        function dialContact(name, ip) {
+            startCall('audio', ip);
+        }
 
+        function endCall() {
+            stopRingingSound();
+            callOverlay.style.display = 'none';
+        }
+
+        // المحادثة وتبادل الصور
         function sendChatMessage() {
             const msg = document.getElementById('chatInput').value.trim();
             const fileInput = document.getElementById('imageInput');
             const history = document.getElementById('chatHistory');
-            if (!msg && fileInput.files.length === 0) return;
+            
+            if (!msg && fileInput.files.length === 0) {
+                alert('اكتب رسالة أو اختر صورة.');
+                return;
+            }
             if (history.innerText.includes('سجل المحادثة فارغ')) history.innerText = '';
+            
             const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            if (msg) { history.innerHTML += `<div><b>أنت (${time}):</b> ${msg}</div>`; document.getElementById('chatInput').value = ''; }
+            
+            if (msg) {
+                history.innerHTML += `<div><b>أنت (${time}):</b> ${msg}</div>`;
+                document.getElementById('chatInput').value = '';
+            }
+            
             if (fileInput.files.length > 0) {
                 const reader = new FileReader();
                 reader.onload = function(e) {
-                    history.innerHTML += `<div><b>أنت (${time}) [صورة]:</b><br><img src="${e.target.result}" style="max-width: 120px; border-radius: 6px; margin-top: 4px;"></div>`;
+                    history.innerHTML += `<div><b>أنت (${time}) [صورة]:</b><br><img src="${e.target.result}" style="max-width: 140px; border-radius: 6px; margin-top: 4px;"></div>`;
                     fileInput.value = '';
                 };
                 reader.readAsDataURL(fileInput.files[0]);
             }
             history.scrollTop = history.scrollHeight;
-        }
-
-        // STT و Translation الباقية
-        let sttRecognition, isSttRunning = false;
-        const sttBtn = document.getElementById('sttBtn'), sttOutput = document.getElementById('sttOutput'), sttStatus = document.getElementById('sttStatus'), sttLang = document.getElementById('sttLang');
-        if (SpeechRecognition) {
-            sttRecognition = new SpeechRecognition();
-            sttRecognition.continuous = false; sttRecognition.interimResults = true;
-            sttRecognition.onstart = () => { isSttRunning = true; sttBtn.classList.add('recording'); sttBtn.innerText = '⏹️ جاري الاستماع...'; };
-            sttRecognition.onresult = (e) => { let t = ''; for(let i=0; i<e.results.length; i++) t += e.results[i][0].transcript; sttOutput.innerText = t; };
-            sttRecognition.onend = () => { sttBtn.classList.remove('recording'); sttBtn.innerText = '🎤 ابدأ التسجيل الصوتي'; isSttRunning = false; };
-        }
-        function toggleSTT() { if (!sttRecognition) return; if (!isSttRunning) { sttRecognition.lang = sttLang.value; sttRecognition.start(); } else { sttRecognition.stop(); } }
-        
-        const transInput = document.getElementById('transInput'), transOutput = document.getElementById('transOutput'), transSource = document.getElementById('transSource'), transTarget = document.getElementById('transTarget'), transMicBtn = document.getElementById('transMicBtn');
-        let transRecognition, isTransVoiceRunning = false;
-        if (SpeechRecognition) {
-            transRecognition = new SpeechRecognition();
-            transRecognition.continuous = false; transRecognition.interimResults = true;
-            transRecognition.onstart = () => { isTransVoiceRunning = true; transMicBtn.classList.add('recording'); };
-            transRecognition.onresult = async (e) => { let t = ''; for(let i=0; i<e.results.length; i++) t += e.results[i][0].transcript; transInput.value = t; await translateText(t); };
-            transRecognition.onend = () => { transMicBtn.classList.remove('recording'); isTransVoiceRunning = false; };
-        }
-        function toggleTranslationVoice() { if (!transRecognition) return; if (!isTransVoiceRunning) { transRecognition.lang = transSource.value === 'ar' ? 'ar-SA' : 'en-US'; transRecognition.start(); } else { transRecognition.stop(); } }
-        async function doTranslation() { const t = transInput.value.trim(); if (!t) return; await translateText(t); }
-        async function translateText(text) {
-            try {
-                const res = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${transSource.value}|${transTarget.value}`);
-                const data = await res.json();
-                if (data && data.responseData) transOutput.innerText = data.responseData.translatedText;
-            } catch(e) {}
-        }
-        function speakTranslation() {
-            const text = transOutput.innerText;
-            if (!text) return;
-            window.speechSynthesis.cancel();
-            const u = new SpeechSynthesisUtterance(text);
-            u.lang = transTarget.value === 'ar' ? 'ar-SA' : 'en-US';
-            window.speechSynthesis.speak(u);
         }
     </script>
 </body>
