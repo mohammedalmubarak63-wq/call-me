@@ -3,313 +3,187 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>P2P Call & Media Hub</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FontAwesome Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <title>P2P Verified Phone Hub</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-        body {
-            font-family: 'Inter', system-ui, -apple-system, sans-serif;
-            background-color: #0f172a;
-            color: #f8fafc;
-        }
-        /* Custom scrollbars */
-        ::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #1e293b;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #334155;
-            border-radius: 4px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #475569;
-        }
+        :root { --bg: #0f172a; --card: #1e293b; --border: #334155; --text: #fff; --primary: #2563eb; --secondary: #059669; --danger: #dc2626; --text-dim: #94a3b8; }
+        body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); padding: 15px; margin: 0; transition: 0.3s; }
+        .container { max-width: 600px; margin: auto; }
+        
+        .header-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        h1 { font-size: 20px; color: #38bdf8; margin: 0; }
+        .lang-btn { background: #334155; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 13px; }
+
+        .section { background: var(--card); padding: 18px; border-radius: 14px; margin-bottom: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.4); border: 1px solid var(--border); }
+        .section h2 { font-size: 16px; margin-top: 0; color: #f8fafc; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+        
+        .controls { display: flex; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
+        .group { flex: 1; min-width: 140px; }
+        label { display: block; font-size: 12px; color: var(--text-dim); margin-bottom: 4px; }
+        
+        input, textarea { width: 100%; background: var(--bg); color: white; border: 1px solid #475569; padding: 10px; border-radius: 8px; font-size: 14px; box-sizing: border-box; }
+        textarea { resize: vertical; min-height: 60px; }
+        
+        button { background: var(--primary); color: white; border: none; padding: 10px 16px; font-size: 14px; font-weight: bold; border-radius: 8px; cursor: pointer; width: 100%; transition: 0.2s; margin-top: 6px; }
+        button.secondary { background: var(--secondary); }
+        button.danger { background: var(--danger); }
+        button.warning { background: #d97706; }
+        
+        .output-box { background: var(--bg); padding: 10px; border-radius: 8px; margin-top: 10px; min-height: 50px; border: 1px solid var(--border); font-size: 13px; line-height: 1.4; word-break: break-word; color: #e2e8f0; }
+        
+        /* شاشة المكالمة والرنين مع خيار الإضافة السريعة */
+        .call-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.96); z-index: 999; flex-direction: column; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; }
+        .call-card { background: var(--card); padding: 25px; border-radius: 16px; border: 1px solid #475569; text-align: center; width: 100%; max-width: 380px; box-shadow: 0 10px 30px rgba(0,0,0,0.6); }
+        .call-card h3 { margin-top: 0; color: #38bdf8; font-size: 20px; }
+        .info-badge { background: var(--bg); padding: 8px 12px; border-radius: 6px; font-size: 13px; color: #38bdf8; border: 1px solid var(--border); margin-bottom: 10px; }
+        
+        .contact-item { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding: 8px 0; }
+        .contact-item span { cursor: pointer; }
+        .contact-item span:hover { color: #38bdf8; }
     </style>
 </head>
-<body class="min-h-screen flex flex-col justify-between p-3 sm:p-6 select-none">
+<body>
+    <div class="container">
+        <div class="header-bar">
+            <h1 id="uiTitle">P2P Verified Phone Hub</h1>
+            <button class="lang-btn" onclick="toggleLanguage()" id="langToggleBtn">English</button>
+        </div>
 
-    <!-- Container -->
-    <div class="max-w-2xl mx-auto w-full space-y-4">
-        
-        <!-- Header & Language Switcher -->
-        <header class="flex justify-between items-center bg-slate-800/80 backdrop-blur border border-slate-700 p-4 rounded-xl shadow-lg">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-lg bg-sky-500/10 border border-sky-500/30 flex items-center justify-center text-sky-400">
-                    <i class="fa-solid fa-phone-nodes text-lg"></i>
-                </div>
-                <div>
-                    <h1 id="uiTitle" class="font-bold text-lg text-sky-400 leading-tight">مركز الاتصالات المباشرة P2P</h1>
-                    <p id="uiSubtitle" class="text-xs text-slate-400">اتصال مباشر وآمن بدون وسيط</p>
-                </div>
+        <!-- التحقق من رقم الجوال عبر OTP -->
+        <div class="section" id="authSection">
+            <h2 id="secAuthTitle">🔐 توثيق رقم الجوال (رمز OTP)</h2>
+            <div id="phoneStep">
+                <label id="lblEnterPhone">أدخل رقم جوالك لتلقي رمز التحقق:</label>
+                <input type="text" id="verifyPhoneInput" placeholder="05xxxxxxxx" style="margin-bottom:8px;">
+                <button onclick="sendOtpCode()" id="btnSendOtp">إرسال رمز التحقق (OTP)</button>
             </div>
-            <button onclick="toggleLanguage()" id="langToggleBtn" class="bg-slate-700 hover:bg-slate-600 active:scale-95 text-xs font-semibold px-4 py-2 rounded-lg border border-slate-600 transition flex items-center gap-2">
-                <i class="fa-solid fa-globe"></i>
-                <span>English</span>
-            </button>
-        </header>
+            <div id="otpStep" style="display:none;">
+                <div id="otpMsg" style="color: #38bdf8; font-size: 13px; margin-bottom: 8px;">تم إرسال رمز التحقق (افتراضي تجريبي: 1234)</div>
+                <input type="text" id="otpCodeInput" placeholder="أدخل رمز التحقق المكون من 4 أرقام" style="margin-bottom:8px;">
+                <button class="secondary" onclick="verifyOtpCode()" id="btnVerifyOtp">تحقق وتفعيل الرقم</button>
+            </div>
+            <div id="verifiedBadge" style="display:none; color: #059669; font-weight: bold; font-size: 14px; text-align: center;">
+                ✅ تم توثيق رقمك بنجاح: <span id="confirmedPhone" style="color: #38bdf8;"></span>
+            </div>
+        </div>
 
-        <!-- Identity & Phone Section -->
-        <section class="bg-slate-800 border border-slate-700 p-4 sm:p-5 rounded-xl shadow-md">
-            <h2 id="secInfoTitle" class="text-sm font-semibold text-slate-200 mb-3 border-b border-slate-700 pb-2 flex items-center gap-2">
-                <i class="fa-solid fa-id-card text-sky-400"></i>
-                <span>📱 هويتك ورقم جوالك</span>
-            </h2>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                <div class="bg-slate-900/60 p-3 rounded-lg border border-slate-700/60 flex flex-col justify-between">
-                    <label id="lblMyPhone" class="text-slate-400 mb-1 block">رقم جوالك الشخصي:</label>
-                    <div class="flex items-center gap-2">
-                        <i class="fa-solid fa-mobile-screen text-slate-400"></i>
-                        <input type="text" id="myPhone" placeholder="05xxxxxxxx" onchange="saveMyPhone()" class="bg-slate-800 border border-slate-600 text-sky-400 font-mono font-bold px-2.5 py-1.5 rounded w-full focus:outline-none focus:border-sky-500">
+        <!-- التطبيق الرئيسي (يظهر بعد التوثيق) -->
+        <div id="mainAppContent" style="display:none;">
+            <!-- جهات الاتصال -->
+            <div class="section">
+                <h2 id="secContactsTitle">👥 جهات الاتصال</h2>
+                <div class="controls">
+                    <div class="group"><input type="text" id="contactName" placeholder="اسم الشخص (مثلاً: زوجتي)"></div>
+                    <div class="group"><input type="text" id="contactPhone" placeholder="رقم الجوال"></div>
+                </div>
+                <button class="secondary" onclick="saveContact()" id="btnSaveContact">➕ حفظ جهة الاتصال</button>
+                <div class="output-box" id="contactsList" style="max-height: 110px; overflow-y: auto; margin-top: 10px;">لا توجد جهات اتصال محفوظة.</div>
+            </div>
+
+            <!-- الاتصال المباشر -->
+            <div class="section">
+                <h2 id="secCallTitle">📞 الاتصال المباشر برقم الجوال</h2>
+                <div class="controls">
+                    <div class="group">
+                        <input type="text" id="targetPhoneInput" placeholder="أدخل رقم جوال الطرف الآخر">
                     </div>
                 </div>
-                <div class="bg-slate-900/60 p-3 rounded-lg border border-slate-700/60 flex flex-col justify-between">
-                    <span id="lblMyPeerId" class="text-slate-400 mb-1 block">معرف الشبكة المحلية (Peer ID):</span>
-                    <div class="flex items-center gap-2 text-emerald-400 font-mono text-xs font-semibold overflow-hidden">
-                        <i class="fa-solid fa-network-wired text-emerald-500 shrink-0"></i>
-                        <span id="myPeerIdDisplay" class="truncate">جاري التوليد...</span>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Contact Directory -->
-        <section class="bg-slate-800 border border-slate-700 p-4 sm:p-5 rounded-xl shadow-md">
-            <h2 id="secContactsTitle" class="text-sm font-semibold text-slate-200 mb-3 border-b border-slate-700 pb-2 flex items-center justify-between">
-                <span class="flex items-center gap-2">
-                    <i class="fa-solid fa-address-book text-emerald-400"></i>
-                    <span id="txtContactsHeading">👥 دفتر جهات الاتصال</span>
-                </span>
-                <span id="contactCountBadge" class="text-xs bg-slate-700 text-slate-300 px-2 py-0.5 rounded-full font-mono">0</span>
-            </h2>
-            
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3">
-                <input type="text" id="contactName" placeholder="اسم الشخص (مثلاً: زوجتي)" class="bg-slate-900 border border-slate-700 text-xs text-white p-2.5 rounded-lg focus:outline-none focus:border-emerald-500">
-                <input type="text" id="contactPhone" placeholder="رقم الجوال" class="bg-slate-900 border border-slate-700 text-xs text-white p-2.5 rounded-lg font-mono focus:outline-none focus:border-emerald-500">
-            </div>
-            
-            <button onclick="saveContact()" id="btnSaveContact" class="w-full bg-emerald-600 hover:bg-emerald-500 active:scale-[0.99] text-white text-xs font-bold py-2.5 rounded-lg transition flex items-center justify-center gap-2 shadow-sm">
-                <i class="fa-solid fa-user-plus"></i>
-                <span>حفظ جهة الاتصال</span>
-            </button>
-
-            <!-- Contacts List -->
-            <div id="contactsList" class="mt-3 space-y-2 max-h-40 overflow-y-auto pr-1">
-                <!-- Contact Items rendered dynamically -->
-            </div>
-        </section>
-
-        <!-- Direct Phone Calling -->
-        <section class="bg-slate-800 border border-slate-700 p-4 sm:p-5 rounded-xl shadow-md">
-            <h2 id="secCallTitle" class="text-sm font-semibold text-slate-200 mb-3 border-b border-slate-700 pb-2 flex items-center gap-2">
-                <i class="fa-solid fa-phone-volume text-sky-400"></i>
-                <span>📞 الاتصال المباشر برقم الجوال</span>
-            </h2>
-            <div class="space-y-3">
-                <div class="relative">
-                    <i class="fa-solid fa-phone text-slate-500 absolute top-3 right-3 dir-rtl:right-3 dir-ltr:left-3 text-xs"></i>
-                    <input type="text" id="targetPhoneInput" placeholder="أدخل رقم جوال الطرف الآخر للاتصال" class="w-full bg-slate-900 border border-slate-700 text-xs text-white p-2.5 px-8 font-mono rounded-lg focus:outline-none focus:border-sky-500">
-                </div>
-                <div class="grid grid-cols-2 gap-2">
-                    <button onclick="startCall('audio')" id="btnAudioCall" class="bg-sky-600 hover:bg-sky-500 active:scale-[0.99] text-white text-xs font-bold py-2.5 rounded-lg transition flex items-center justify-center gap-2 shadow-sm">
-                        <i class="fa-solid fa-phone"></i>
-                        <span>اتصال صوتي</span>
-                    </button>
-                    <button onclick="startCall('video')" id="btnVideoCall" class="bg-emerald-600 hover:bg-emerald-500 active:scale-[0.99] text-white text-xs font-bold py-2.5 rounded-lg transition flex items-center justify-center gap-2 shadow-sm">
-                        <i class="fa-solid fa-video"></i>
-                        <span>اتصال فيديو</span>
-                    </button>
-                </div>
-            </div>
-        </section>
-
-        <!-- Isolated Private Chat -->
-        <section class="bg-slate-800 border border-slate-700 p-4 sm:p-5 rounded-xl shadow-md flex flex-col">
-            <div class="border-b border-slate-700 pb-2 mb-3 flex justify-between items-center">
-                <h2 class="text-sm font-semibold text-slate-200 flex items-center gap-2">
-                    <i class="fa-solid fa-comments text-sky-400"></i>
-                    <span id="secChatTitlePrefix">💬 المحادثة الخاصة مع:</span>
-                    <span id="activeChatName" class="text-sky-400 font-bold bg-sky-500/10 px-2 py-0.5 rounded border border-sky-500/20 text-xs">لا يوجد شخص محدد</span>
-                </h2>
-                <button onclick="clearCurrentChat()" id="btnClearChat" title="مسح المحادثة" class="text-xs text-slate-400 hover:text-rose-400 transition hidden">
-                    <i class="fa-solid fa-trash-can"></i>
-                </button>
-            </div>
-
-            <!-- Messages Box -->
-            <div id="chatHistory" class="bg-slate-900/90 border border-slate-700 rounded-lg p-3 min-h-[140px] max-h-56 overflow-y-auto space-y-2 text-xs mb-3">
-                <div class="h-full flex flex-col items-center justify-center text-slate-500 italic py-6 text-center" id="emptyChatPlaceholder">
-                    <i class="fa-solid fa-comments text-2xl mb-2 text-slate-600"></i>
-                    <span id="txtChatPlaceholder">اختر جهة اتصال من القائمة أعلاه لفتح المحادثة وسجل الرسائل المعزول...</span>
+                <div class="controls">
+                    <button onclick="startCall('audio')" id="btnAudioCall">📞 اتصال صوتي (مع نغمة رنين)</button>
+                    <button class="secondary" onclick="startCall('video')" id="btnVideoCall">📹 اتصال فيديو</button>
                 </div>
             </div>
 
-            <!-- Message Input Controls -->
-            <div class="space-y-2">
-                <textarea id="chatInput" rows="2" placeholder="اكتب رسالة خاصة هنا..." class="w-full bg-slate-900 border border-slate-700 text-xs text-white p-2.5 rounded-lg focus:outline-none focus:border-sky-500 resize-none"></textarea>
-                <div class="flex items-center gap-2">
-                    <label class="cursor-pointer bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs px-3 py-2 rounded-lg border border-slate-600 flex items-center gap-1.5 transition shrink-0">
-                        <i class="fa-solid fa-paperclip text-sky-400"></i>
-                        <span id="lblAttachImage">صورة</span>
-                        <input type="file" id="imageInput" accept="image/*" class="hidden" onchange="handleFileSelect(this)">
-                    </label>
-                    <span id="fileNameDisplay" class="text-[11px] text-slate-400 truncate flex-1 font-mono"></span>
-                    <button onclick="sendChatMessage()" id="btnSend" class="bg-sky-600 hover:bg-sky-500 active:scale-[0.99] text-white text-xs font-bold px-5 py-2 rounded-lg transition flex items-center gap-2 shadow-sm shrink-0">
-                        <i class="fa-solid fa-paper-plane"></i>
-                        <span>إرسال</span>
-                    </button>
-                </div>
+            <!-- المحادثة الخاصة المعزولة -->
+            <div class="section">
+                <h2 id="secChatTitle">💬 المحادثة الخاصة مع: <span id="activeChatName" style="color:#38bdf8;">اختر شخصاً من القائمة</span></h2>
+                <textarea id="chatInput" placeholder="اكتب رسالة..."></textarea>
+                <input type="file" id="imageInput" accept="image/*" style="margin-top: 8px;">
+                <button onclick="sendChatMessage()" style="margin-top: 8px;" id="btnSend">📤 إرسال رسالة أو صورة</button>
+                <div class="output-box" id="chatHistory" style="max-height: 160px; overflow-y: auto; margin-top: 10px;">اختر جهة اتصال بالأعلى لفتح محادثتها وسجلها الخاص...</div>
             </div>
-        </section>
-
-    </div>
-
-    <!-- Active Call Overlay Modal -->
-    <div id="callOverlay" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-50 hidden flex-col items-center justify-center p-4">
-        <div class="bg-slate-800 border border-slate-700 p-6 rounded-2xl w-full max-w-sm text-center shadow-2xl relative overflow-hidden">
-            <!-- Pulsing Ring Background -->
-            <div class="absolute -top-12 -left-12 w-32 h-32 bg-sky-500/10 rounded-full blur-xl animate-pulse"></div>
-            <div class="absolute -bottom-12 -right-12 w-32 h-32 bg-emerald-500/10 rounded-full blur-xl animate-pulse"></div>
-
-            <div class="w-20 h-20 bg-slate-700/60 border-2 border-sky-400/40 rounded-full flex items-center justify-center mx-auto mb-4 text-sky-400 text-3xl animate-bounce">
-                <i class="fa-solid fa-phone-volume" id="callIcon"></i>
-            </div>
-            
-            <h3 id="callTitle" class="text-lg font-bold text-white mb-1">جاري الاتصال...</h3>
-            <p id="callStatusText" class="text-xs text-sky-400 font-mono mb-6 dir-ltr">0500000000</p>
-            
-            <!-- Dynamic Actions -->
-            <div id="incomingActions" class="space-y-2 mb-3 hidden">
-                <button onclick="acceptIncomingCall()" id="btnAccept" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs py-2.5 rounded-lg transition flex items-center justify-center gap-2 shadow-lg">
-                    <i class="fa-solid fa-phone"></i>
-                    <span>🟢 قبول المكالمة</span>
-                </button>
-                <button onclick="quickSaveCaller()" id="btnQuickSave" class="w-full bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs py-2.5 rounded-lg transition flex items-center justify-center gap-2 shadow-md">
-                    <i class="fa-solid fa-user-plus"></i>
-                    <span>➕ حفظ المتصل في جهات الاتصال</span>
-                </button>
-            </div>
-
-            <button onclick="endCall()" id="btnEndCall" class="w-full bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs py-2.5 rounded-lg transition flex items-center justify-center gap-2 shadow-md">
-                <i class="fa-solid fa-phone-slash"></i>
-                <span>🔴 إنهاء المكالمة</span>
-            </button>
         </div>
     </div>
 
-    <!-- Toast Notification Box -->
-    <div id="toastBox" class="fixed bottom-4 left-1/2 -translate-x-1/2 bg-slate-800 border border-slate-700 text-white text-xs px-4 py-2.5 rounded-lg shadow-xl hidden transition-all z-50 flex items-center gap-2">
-        <i class="fa-solid fa-circle-info text-sky-400" id="toastIcon"></i>
-        <span id="toastText">إشعار</span>
+    <!-- شاشة المكالمة / الاستقبال مع خيار الإضافة السريعة -->
+    <div class="call-overlay" id="callOverlay">
+        <div class="call-card">
+            <h3 id="callTitle">مكالمة واردة...</h3>
+            <p id="callStatusText" style="color: var(--text-dim); font-size: 13px; margin-bottom: 15px;">يرجى الانتظار...</p>
+            
+            <div id="incomingActions" style="display:none; margin-bottom: 10px;">
+                <button class="secondary" onclick="acceptIncomingCall()" style="margin-bottom:6px;" id="btnAccept">🟢 قبول المكالمة</button>
+                <button class="warning" onclick="quickSaveCaller()" style="margin-bottom:6px;" id="btnQuickSave">➕ حفظ المتصل في جهات الاتصال</button>
+            </div>
+            
+            <button class="danger" onclick="endCall()" id="btnEndCall">🔴 إنهاء المكالمة</button>
+        </div>
     </div>
 
-    <!-- Application Logic -->
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <script>
-        // State variables
         let currentLang = 'ar';
-        let activeContactPhone = null;
-        let activeContactName = null;
+        let myVerifiedPhone = null;
+        let activePhone = null;
+        let peer = null;
+        let currentCall = null;
+        let incomingCallObj = null;
         let incomingCallerPhone = null;
-        let callActive = false;
-        let audioCtx = null;
-        let ringInterval = null;
-        let selectedFileBase64 = null;
 
-        // Translation Map
         const translations = {
             ar: {
-                title: "مركز الاتصالات المباشرة P2P",
-                subtitle: "اتصال مباشر وآمن بدون وسيط",
+                title: "P2P Verified Phone Hub",
                 langBtn: "English",
-                secInfo: "📱 هويتك ورقم جوالك",
-                lblMyPhone: "رقم جوالك الشخصي:",
-                lblMyPeerId: "معرف الشبكة المحلية (Peer ID):",
-                secContactsHeading: "👥 دفتر جهات الاتصال",
+                secAuth: "🔐 توثيق رقم الجوال (رمز OTP)",
+                lblPhone: "أدخل رقم جوالك لتلقي رمز التحقق:",
+                sendOtp: "إرسال رمز التحقق (OTP)",
+                otpMsg: "تم إرسال رمز التحقق التجريبي إلى جوالك: 1234",
+                verifyOtp: "تحقق وتفعيل الرقم",
+                verified: "✅ تم توثيق رقمك بنجاح: ",
+                secContacts: "👥 جهات الاتصال",
                 namePh: "اسم الشخص (مثلاً: زوجتي)",
                 phonePh: "رقم الجوال",
-                saveContact: "حفظ جهة الاتصال",
+                saveContact: "➕ حفظ جهة الاتصال",
                 secCall: "📞 الاتصال المباشر برقم الجوال",
-                targetPh: "أدخل رقم جوال الطرف الآخر للاتصال",
-                audioCall: "اتصال صوتي",
-                videoCall: "اتصال فيديو",
-                secChatPrefix: "💬 المحادثة الخاصة مع:",
-                selectPrompt: "لا يوجد شخص محدد",
-                chatPh: "اكتب رسالة خاصة هنا...",
-                attachImg: "صورة",
-                sendBtn: "إرسال",
-                noContacts: "لا توجد جهات اتصال محفوظة حتى الآن.",
-                chatPlaceholder: "اختر جهة اتصال من القائمة أعلاه لفتح المحادثة وسجل الرسائل المعزول...",
-                emptyHistory: "سجل الرسائل فارغ مع هذه الجهة.",
-                callIncoming: "مكالمة واردة...",
-                callOutgoing: "جاري الاتصال...",
-                btnAccept: "🟢 قبول المكالمة",
-                btnQuickSave: "➕ حفظ المتصل في جهات الاتصال",
-                btnEndCall: "🔴 إنهاء المكالمة",
-                you: "أنت",
-                callConnected: "المكالمة نشطة الآن",
-                savedSuccess: "تم حفظ جهة الاتصال بنجاح!",
-                fillFields: "الرجاء إدخال الاسم ورقم الجوال.",
-                enterNamePrompt: "أدخل اسماً لهذه الجهة:",
-                clearHistoryConfirm: "هل أنت تأكد من مسح سجّل المحادثة لهذه الجهة؟"
+                targetPh: "أدخل رقم جوال الطرف الآخر",
+                audioCall: "📞 اتصال صوتي (مع نغمة رنين)",
+                videoCall: "📹 اتصال فيديو",
+                chatTitle: "💬 المحادثة الخاصة مع: ",
+                selectPrompt: "اختر شخصاً من القائمة",
+                chatPh: "اكتب رسالة...",
+                sendBtn: "📤 إرسال رسالة أو صورة",
+                noContacts: "لا توجد جهات اتصال محفوظة.",
+                acceptBtn: "🟢 قبول المكالمة",
+                quickSaveBtn: "➕ حفظ المتصل في جهات الاتصال",
+                endCallBtn: "🔴 إنهاء المكالمة"
             },
             en: {
-                title: "P2P Direct Call & Chat Hub",
-                subtitle: "Secure & direct P2P communication",
+                title: "P2P Verified Phone Hub",
                 langBtn: "العربية",
-                secInfo: "📱 Your Identity & Phone Number",
-                lblMyPhone: "Personal Phone Number:",
-                lblMyPeerId: "Local Peer ID:",
-                secContactsHeading: "👥 Contact Directory",
-                namePh: "Name (e.g. Wife)",
+                secAuth: "🔐 Phone Number Verification (OTP)",
+                lblPhone: "Enter your phone number to receive OTP:",
+                sendOtp: "Send OTP",
+                otpMsg: "Demo OTP sent to your phone: 1234",
+                verifyOtp: "Verify & Activate",
+                verified: "✅ Phone verified successfully: ",
+                secContacts: "👥 Contacts",
+                namePh: "Contact Name (e.g. Wife)",
                 phonePh: "Phone Number",
-                saveContact: "Save Contact",
+                saveContact: "➕ Save Contact",
                 secCall: "📞 Direct Phone Call",
                 targetPh: "Enter phone number to call",
-                audioCall: "Audio Call",
-                videoCall: "Video Call",
-                secChatPrefix: "💬 Private Chat with:",
-                selectPrompt: "No contact selected",
-                chatPh: "Type a private message here...",
-                attachImg: "Image",
-                sendBtn: "Send",
-                noContacts: "No saved contacts yet.",
-                chatPlaceholder: "Select a contact from the directory above to open isolated chat history...",
-                emptyHistory: "No message history with this contact.",
-                callIncoming: "Incoming Call...",
-                callOutgoing: "Calling...",
-                btnAccept: "🟢 Accept Call",
-                btnQuickSave: "➕ Save Caller to Contacts",
-                btnEndCall: "🔴 End Call",
-                you: "You",
-                callConnected: "Call is active now",
-                savedSuccess: "Contact saved successfully!",
-                fillFields: "Please enter both name and phone number.",
-                enterNamePrompt: "Enter a contact name for this caller:",
-                clearHistoryConfirm: "Are you sure you want to clear chat history for this contact?"
+                audioCall: "📞 Audio Call (with ringtone)",
+                videoCall: "📹 Video Call",
+                chatTitle: "💬 Private Chat with: ",
+                selectPrompt: "Select a contact from list",
+                chatPh: "Type a message...",
+                sendBtn: "📤 Send Message or Image",
+                noContacts: "No saved contacts.",
+                acceptBtn: "🟢 Accept Call",
+                quickSaveBtn: "➕ Save Caller to Contacts",
+                endCallBtn: "🔴 End Call"
             }
         };
 
-        // Initialize application state
-        window.addEventListener('DOMContentLoaded', () => {
-            // Load saved personal phone
-            const savedPhone = localStorage.getItem('p2p_my_phone') || '05' + Math.floor(10000000 + Math.random() * 90000000);
-            document.getElementById('myPhone').value = savedPhone;
-            localStorage.setItem('p2p_my_phone', savedPhone);
-
-            // Mock Peer ID generation based on phone
-            const generatedPeerId = 'PEER-' + Math.random().toString(36).substring(2, 9).toUpperCase();
-            document.getElementById('myPeerIdDisplay').innerText = generatedPeerId;
-
-            // Load contact list
-            renderContacts();
-        });
-
-        // Toggle Dual Language
         function toggleLanguage() {
             currentLang = currentLang === 'ar' ? 'en' : 'ar';
             const html = document.getElementById('htmlRoot');
@@ -318,364 +192,266 @@
             
             const t = translations[currentLang];
             document.getElementById('uiTitle').innerText = t.title;
-            document.getElementById('uiSubtitle').innerText = t.subtitle;
-            document.getElementById('langToggleBtn').querySelector('span').innerText = t.langBtn;
-            document.getElementById('secInfoTitle').querySelector('span').innerText = t.secInfo;
-            document.getElementById('lblMyPhone').innerText = t.lblMyPhone;
-            document.getElementById('lblMyPeerId').innerText = t.lblMyPeerId;
-            document.getElementById('txtContactsHeading').innerText = t.secContactsHeading;
+            document.getElementById('langToggleBtn').innerText = t.langBtn;
+            document.getElementById('secAuthTitle').innerText = t.secAuth;
+            document.getElementById('lblEnterPhone').innerText = t.lblPhone;
+            document.getElementById('btnSendOtp').innerText = t.sendOtp;
+            document.getElementById('otpMsg').innerText = t.otpMsg;
+            document.getElementById('btnVerifyOtp').innerText = t.verifyOtp;
+            document.getElementById('secContactsTitle').innerText = t.secContacts;
             document.getElementById('contactName').placeholder = t.namePh;
             document.getElementById('contactPhone').placeholder = t.phonePh;
-            document.getElementById('btnSaveContact').querySelector('span').innerText = t.saveContact;
-            document.getElementById('secCallTitle').querySelector('span').innerText = t.secCall;
+            document.getElementById('btnSaveContact').innerText = t.saveContact;
+            document.getElementById('secCallTitle').innerText = t.secCall;
             document.getElementById('targetPhoneInput').placeholder = t.targetPh;
-            document.getElementById('btnAudioCall').querySelector('span').innerText = t.audioCall;
-            document.getElementById('btnVideoCall').querySelector('span').innerText = t.videoCall;
-            document.getElementById('secChatTitlePrefix').innerText = t.secChatPrefix;
+            document.getElementById('btnAudioCall').innerText = t.audioCall;
+            document.getElementById('btnVideoCall').innerText = t.videoCall;
+            document.getElementById('btnSend').innerText = t.sendBtn;
             document.getElementById('chatInput').placeholder = t.chatPh;
-            document.getElementById('lblAttachImage').innerText = t.attachImg;
-            document.getElementById('btnSend').querySelector('span').innerText = t.sendBtn;
-            document.getElementById('txtChatPlaceholder').innerText = t.chatPlaceholder;
+            document.getElementById('btnAccept').innerText = t.acceptBtn;
+            document.getElementById('btnQuickSave').innerText = t.quickSaveBtn;
+            document.getElementById('btnEndCall').innerText = t.endCallBtn;
+            if(!activePhone) document.getElementById('activeChatName').innerText = t.selectPrompt;
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const savedVerifiedPhone = localStorage.getItem('verified_phone');
+            if (savedVerifiedPhone) {
+                myVerifiedPhone = savedVerifiedPhone;
+                activateApp(savedVerifiedPhone);
+            }
+            loadContacts();
+        });
+
+        // خطوات إرسال وتحقق OTP
+        let tempPhone = "";
+        function sendOtpCode() {
+            const p = document.getElementById('verifyPhoneInput').value.trim();
+            if (!p) {
+                alert(currentLang === 'ar' ? 'الرجاء إدخال رقم الجوال أولاً.' : 'Please enter phone number.');
+                return;
+            }
+            tempPhone = p;
+            document.getElementById('phoneStep').style.display = 'none';
+            document.getElementById('otpStep').style.display = 'block';
+        }
+
+        function verifyOtpCode() {
+            const code = document.getElementById('otpCodeInput').value.trim();
+            // الرمز التجريبي الافتراضي هو 1234 لتسهيل الاختبار الفوري
+            if (code === "1234" || code === "0000") {
+                myVerifiedPhone = tempPhone;
+                localStorage.setItem('verified_phone', myVerifiedPhone);
+                activateApp(myVerifiedPhone);
+            } else {
+                alert(currentLang === 'ar' ? 'رمز التحقق غير صحيح! استخدم الرمز الافتراضي التجريبي: 1234' : 'Incorrect OTP! Use demo code: 1234');
+            }
+        }
+
+        function activateApp(phone) {
+            document.getElementById('authSection').style.display = 'none';
+            document.getElementById('verifiedBadge').style.display = 'block';
+            document.getElementById('confirmedPhone').innerText = phone;
+            document.getElementById('mainAppContent').style.display = 'block';
+
+            // تفعيل الاتصال الحقيقي برقم الجوال عبر PeerJS
+            if (peer) peer.destroy();
+            peer = new Peer("p2p_verified_" + phone);
             
-            document.getElementById('btnAccept').querySelector('span').innerText = t.btnAccept;
-            document.getElementById('btnQuickSave').querySelector('span').innerText = t.btnQuickSave;
-            document.getElementById('btnEndCall').querySelector('span').innerText = t.btnEndCall;
-
-            if (!activeContactPhone) {
-                document.getElementById('activeChatName').innerText = t.selectPrompt;
-            }
-
-            renderContacts();
-            if (activeContactPhone) {
-                renderChatHistory();
-            }
+            peer.on('call', (call) => {
+                incomingCallObj = call;
+                incomingCallerPhone = call.peer.replace('p2p_verified_', '');
+                document.getElementById('callTitle').innerText = currentLang === 'ar' ? 'مكالمة واردة' : 'Incoming Call';
+                document.getElementById('callStatusText').innerText = (currentLang === 'ar' ? 'من الرقم: ' : 'From: ') + incomingCallerPhone;
+                document.getElementById('incomingActions').style.display = 'block';
+                document.getElementById('callOverlay').style.display = 'flex';
+                startRingingSound();
+            });
         }
 
-        // Save self phone
-        function saveMyPhone() {
-            const val = document.getElementById('myPhone').value.trim();
-            if (val) {
-                localStorage.setItem('p2p_my_phone', val);
-                showToast(currentLang === 'ar' ? 'تم تحديث رقمك الشخصي' : 'Phone number updated');
-            }
-        }
-
-        // Save new contact
+        // إدارة جهات الاتصال
         function saveContact() {
             const name = document.getElementById('contactName').value.trim();
             const phone = document.getElementById('contactPhone').value.trim();
-            const t = translations[currentLang];
 
             if (!name || !phone) {
-                showToast(t.fillFields, 'error');
+                alert(currentLang === 'ar' ? 'الرجاء إدخال الاسم ورقم الجوال.' : 'Please enter name and phone number.');
                 return;
             }
 
-            let contacts = JSON.parse(localStorage.getItem('p2p_contacts_list') || '[]');
-            // Check for duplicates
-            const index = contacts.findIndex(c => c.phone === phone);
-            if (index > -1) {
-                contacts[index].name = name;
-            } else {
-                contacts.push({ name, phone });
-            }
-            
-            localStorage.setItem('p2p_contacts_list', JSON.stringify(contacts));
-            
+            let contacts = JSON.parse(localStorage.getItem('p2p_phone_contacts') || '[]');
+            contacts.push({ name, phone });
+            localStorage.setItem('p2p_phone_contacts', JSON.stringify(contacts));
+
             document.getElementById('contactName').value = '';
             document.getElementById('contactPhone').value = '';
-            renderContacts();
-            showToast(t.savedSuccess);
+            loadContacts();
+            alert(currentLang === 'ar' ? 'تم الحفظ بنجاح!' : 'Saved successfully!');
         }
 
-        // Render Contacts Directory
-        function renderContacts() {
+        function loadContacts() {
             const listDiv = document.getElementById('contactsList');
-            const contacts = JSON.parse(localStorage.getItem('p2p_contacts_list') || '[]');
-            document.getElementById('contactCountBadge').innerText = contacts.length;
-
+            let contacts = JSON.parse(localStorage.getItem('p2p_phone_contacts') || '[]');
             if (contacts.length === 0) {
-                listDiv.innerHTML = `<div class="text-center text-slate-500 text-xs py-3 italic">${translations[currentLang].noContacts}</div>`;
+                listDiv.innerText = translations[currentLang].noContacts;
                 return;
             }
-
             listDiv.innerHTML = '';
-            contacts.forEach(c => {
-                const isActive = activeContactPhone === c.phone;
-                const activeClass = isActive ? 'border-sky-500/60 bg-sky-500/10' : 'border-slate-700/60 bg-slate-900/60 hover:bg-slate-700/40';
-                
-                listDiv.innerHTML += `
-                    <div class="flex items-center justify-between p-2.5 rounded-lg border ${activeClass} transition">
-                        <div onclick="selectContact('${c.name}', '${c.phone}')" class="cursor-pointer flex-1 flex items-center gap-2.5 overflow-hidden">
-                            <div class="w-7 h-7 rounded-full bg-slate-700 text-sky-400 flex items-center justify-center font-bold text-xs shrink-0">
-                                ${c.name.charAt(0).toUpperCase()}
-                            </div>
-                            <div class="truncate">
-                                <div class="font-semibold text-slate-200 text-xs">${c.name}</div>
-                                <div class="text-[10px] text-slate-400 font-mono">${c.phone}</div>
-                            </div>
-                        </div>
-                        <div class="flex items-center gap-1.5 shrink-0">
-                            <button onclick="triggerCall('${c.phone}', '${c.name}', 'audio')" class="bg-sky-600/80 hover:bg-sky-500 text-white p-1.5 px-2 rounded text-[11px] transition flex items-center gap-1">
-                                <i class="fa-solid fa-phone"></i>
-                            </button>
-                            <button onclick="deleteContact('${c.phone}')" class="text-slate-500 hover:text-rose-400 p-1.5 transition text-[11px]">
-                                <i class="fa-solid fa-trash"></i>
-                            </button>
-                        </div>
-                    </div>
-                `;
+            contacts.forEach((c) => {
+                listDiv.innerHTML += `<div class="contact-item">
+                    <span onclick="selectContact('${c.name}', '${c.phone}')"><b>${c.name}</b> (${c.phone})</span>
+                    <button style="width:auto; padding:4px 10px; font-size:12px;" onclick="quickCall('${c.phone}')">${currentLang === 'ar' ? 'اتصال' : 'Call'}</button>
+                </div>`;
             });
         }
 
-        function deleteContact(phone) {
-            let contacts = JSON.parse(localStorage.getItem('p2p_contacts_list') || '[]');
-            contacts = contacts.filter(c => c.phone !== phone);
-            localStorage.setItem('p2p_contacts_list', JSON.stringify(contacts));
-            if (activeContactPhone === phone) {
-                activeContactPhone = null;
-                activeContactName = null;
-                document.getElementById('activeChatName').innerText = translations[currentLang].selectPrompt;
-                document.getElementById('btnClearChat').classList.add('hidden');
-                document.getElementById('chatHistory').innerHTML = `
-                    <div class="h-full flex flex-col items-center justify-center text-slate-500 italic py-6 text-center">
-                        <i class="fa-solid fa-comments text-2xl mb-2 text-slate-600"></i>
-                        <span>${translations[currentLang].chatPlaceholder}</span>
-                    </div>`;
-            }
-            renderContacts();
+        function quickCall(phone) {
+            document.getElementById('targetPhoneInput').value = phone;
+            startCall('audio');
         }
 
-        // Select Contact for Isolated Chat
         function selectContact(name, phone) {
-            activeContactPhone = phone;
-            activeContactName = name;
+            activePhone = phone;
             document.getElementById('activeChatName').innerText = `${name} (${phone})`;
-            document.getElementById('targetPhoneInput').value = phone;
-            document.getElementById('btnClearChat').classList.remove('hidden');
-            renderContacts();
-            renderChatHistory();
+            loadChatHistory();
         }
 
-        // Render Isolated Chat History
-        function renderChatHistory() {
-            const chatBox = document.getElementById('chatHistory');
-            if (!activeContactPhone) return;
-
-            const storageKey = `chat_logs_${activeContactPhone}`;
-            const history = JSON.parse(localStorage.getItem(storageKey) || '[]');
-            const t = translations[currentLang];
-
-            if (history.length === 0) {
-                chatBox.innerHTML = `<div class="text-center text-slate-500 text-xs py-8 italic">${t.emptyHistory}</div>`;
-                return;
-            }
-
-            chatBox.innerHTML = '';
-            history.forEach(item => {
-                const isMe = item.sender === 'me';
-                const alignClass = isMe ? 'justify-end' : 'justify-start';
-                const bubbleClass = isMe ? 'bg-sky-600 text-white rounded-br-none' : 'bg-slate-800 text-slate-200 border border-slate-700 rounded-bl-none';
-                
-                let mediaHtml = '';
-                if (item.image) {
-                    mediaHtml = `<img src="${item.image}" class="max-w-[160px] rounded-lg mt-1.5 border border-slate-700/80 shadow-sm">`;
-                }
-
-                chatBox.innerHTML += `
-                    <div class="flex ${alignClass} mb-2">
-                        <div class="max-w-[80%] ${bubbleClass} p-2.5 rounded-xl text-xs space-y-1 shadow-sm">
-                            <div class="flex items-center gap-2 justify-between text-[10px] opacity-75 border-b border-white/10 pb-1">
-                                <span class="font-bold">${isMe ? t.you : (activeContactName || item.sender)}</span>
-                                <span class="font-mono">${item.time}</span>
-                            </div>
-                            ${item.text ? `<p class="whitespace-pre-wrap leading-relaxed">${item.text}</p>` : ''}
-                            ${mediaHtml}
-                        </div>
-                    </div>
-                `;
-            });
-
-            chatBox.scrollTop = chatBox.scrollHeight;
+        // نغمة الرنين الصوتية
+        let audioCtx = null, ringInterval = null;
+        function startRingingSound() {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            ringInterval = setInterval(() => {
+                if (!audioCtx) return;
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(440, audioCtx.currentTime);
+                osc.frequency.setValueAtTime(480, audioCtx.currentTime + 0.2);
+                gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 1.2);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 1.2);
+            }, 2500);
         }
+        function stopRingingSound() { if (ringInterval) { clearInterval(ringInterval); ringInterval = null; } }
 
-        // Clear Current Contact's Chat History
-        function clearCurrentChat() {
-            if (!activeContactPhone) return;
-            if (confirm(translations[currentLang].clearHistoryConfirm)) {
-                localStorage.removeItem(`chat_logs_${activeContactPhone}`);
-                renderChatHistory();
-            }
-        }
-
-        // Image Attachment Handler
-        function handleFileSelect(input) {
-            const file = input.files[0];
-            if (file) {
-                document.getElementById('fileNameDisplay').innerText = file.name;
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    selectedFileBase64 = e.target.result;
-                };
-                reader.readAsDataURL(file);
-            }
-        }
-
-        // Send Chat Message
-        function sendChatMessage() {
-            if (!activeContactPhone) {
-                showToast(translations[currentLang].chatPlaceholder, 'error');
-                return;
-            }
-
-            const input = document.getElementById('chatInput');
-            const text = input.value.trim();
-
-            if (!text && !selectedFileBase64) return;
-
-            const storageKey = `chat_logs_${activeContactPhone}`;
-            let history = JSON.parse(localStorage.getItem(storageKey) || '[]');
-            
-            const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            
-            history.push({
-                sender: 'me',
-                text: text,
-                image: selectedFileBase64,
-                time: timeStr
-            });
-
-            localStorage.setItem(storageKey, JSON.stringify(history));
-            
-            // Reset input fields
-            input.value = '';
-            selectedFileBase64 = null;
-            document.getElementById('imageInput').value = '';
-            document.getElementById('fileNameDisplay').innerText = '';
-            
-            renderChatHistory();
-        }
-
-        // Web Audio Telephony Ringtone (440Hz / 480Hz dual tone)
-        function startRingtone() {
-            try {
-                if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                if (audioCtx.state === 'suspended') audioCtx.resume();
-                
-                stopRingtone(); // Clear any existing
-                ringInterval = setInterval(() => {
-                    if (!audioCtx) return;
-                    
-                    const osc1 = audioCtx.createOscillator();
-                    const osc2 = audioCtx.createOscillator();
-                    const gain = audioCtx.createGain();
-
-                    osc1.type = 'sine';
-                    osc2.type = 'sine';
-                    osc1.frequency.setValueAtTime(440, audioCtx.currentTime);
-                    osc2.frequency.setValueAtTime(480, audioCtx.currentTime);
-
-                    gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
-                    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 1.5);
-
-                    osc1.connect(gain);
-                    osc2.connect(gain);
-                    gain.connect(audioCtx.destination);
-
-                    osc1.start();
-                    osc2.start();
-                    osc1.stop(audioCtx.currentTime + 1.5);
-                    osc2.stop(audioCtx.currentTime + 1.5);
-                }, 2800);
-            } catch (e) {
-                console.warn('AudioContext failed:', e);
-            }
-        }
-
-        function stopRingtone() {
-            if (ringInterval) {
-                clearInterval(ringInterval);
-                ringInterval = null;
-            }
-        }
-
-        // Call Triggers
-        function triggerCall(phone, name, type) {
-            document.getElementById('targetPhoneInput').value = phone;
-            if (name) selectContact(name, phone);
-            startCall(type);
-        }
-
-        function startCall(type) {
+        async function startCall(type) {
             const targetPhone = document.getElementById('targetPhoneInput').value.trim();
-            const t = translations[currentLang];
-            
             if (!targetPhone) {
-                showToast(t.targetPh, 'error');
+                alert(currentLang === 'ar' ? 'الرجاء إدخال رقم الجوال للاتصال.' : 'Please enter phone number to call.');
                 return;
             }
-
-            incomingCallerPhone = targetPhone;
-            callActive = true;
             
-            document.getElementById('callTitle').innerText = t.callOutgoing;
+            document.getElementById('callTitle').innerText = currentLang === 'ar' ? 'جاري الاتصال...' : 'Calling...';
             document.getElementById('callStatusText').innerText = targetPhone;
-            document.getElementById('incomingActions').classList.add('hidden');
-            document.getElementById('callOverlay').classList.remove('hidden');
-            document.getElementById('callOverlay').classList.add('flex');
-            
-            startRingtone();
+            document.getElementById('incomingActions').style.display = 'none'; // المكالمة الصادرة تعرض زر الإنهاء فقط
+            document.getElementById('callOverlay').style.display = 'flex';
+            startRingingSound();
+
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: type === 'video' });
+                const targetId = "p2p_verified_" + targetPhone;
+                currentCall = peer.call(targetId, stream);
+                currentCall.on('stream', (remoteStream) => {
+                    stopRingingSound();
+                    document.getElementById('callStatusText').innerText = currentLang === 'ar' ? 'المكالمة نشطة' : 'Call Active';
+                });
+                currentCall.on('close', () => { endCall(); });
+            } catch (err) {
+                alert(currentLang === 'ar' ? 'تعذر الوصول للميكروفون أو الكاميرا.' : 'Media access error.');
+                endCall();
+            }
         }
 
-        // Accept Call Action
-        function acceptIncomingCall() {
-            stopRingtone();
-            const t = translations[currentLang];
-            document.getElementById('callTitle').innerText = t.callConnected;
-            document.getElementById('incomingActions').classList.add('hidden');
+        async function acceptIncomingCall() {
+            stopRingingSound();
+            document.getElementById('callStatusText').innerText = currentLang === 'ar' ? 'المكالمة نشطة' : 'Call Active';
+            document.getElementById('incomingActions').style.display = 'none';
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
+                incomingCallObj.answer(stream);
+                incomingCallObj.on('stream', (remoteStream) => {});
+            } catch (err) {
+                endCall();
+            }
         }
 
-        // Quick Save Caller
+        // ميزة الحفظ السريع للمتصل من شاشة الاستقبال مباشرة
         function quickSaveCaller() {
             if (!incomingCallerPhone) return;
-            const t = translations[currentLang];
-            const name = prompt(t.enterNamePrompt, 'New Contact');
-            
-            if (name) {
-                let contacts = JSON.parse(localStorage.getItem('p2p_contacts_list') || '[]');
-                contacts.push({ name, phone: incomingCallerPhone });
-                localStorage.setItem('p2p_contacts_list', JSON.stringify(contacts));
-                renderContacts();
-                selectContact(name, incomingCallerPhone);
-                showToast(t.savedSuccess);
-            }
+            const name = prompt(currentLang === 'ar' ? `أدخل اسماً لهذا الرقم (${incomingCallerPhone}):` : `Enter name for number (${incomingCallerPhone}):`, 'متصل جديد');
+            if (!name) return;
+
+            let contacts = JSON.parse(localStorage.getItem('p2p_phone_contacts') || '[]');
+            contacts.push({ name, phone: incomingCallerPhone });
+            localStorage.setItem('p2p_phone_contacts', JSON.stringify(contacts));
+            loadContacts();
+            alert(currentLang === 'ar' ? 'تم حفظ المتصل في جهات الاتصال بنجاح!' : 'Caller saved successfully!');
         }
 
-        // End Call
         function endCall() {
-            stopRingtone();
-            callActive = false;
-            document.getElementById('callOverlay').classList.add('hidden');
-            document.getElementById('callOverlay').classList.remove('flex');
+            stopRingingSound();
+            if (currentCall) { currentCall.close(); currentCall = null; }
+            if (incomingCallObj) { incomingCallObj.close(); incomingCallObj = null; }
+            document.getElementById('callOverlay').style.display = 'none';
+            document.getElementById('incomingActions').style.display = 'none';
         }
 
-        // Toast Helper
-        function showToast(msg, type = 'info') {
-            const box = document.getElementById('toastBox');
-            const txt = document.getElementById('toastText');
-            const icon = document.getElementById('toastIcon');
+        // المحادثة الخاصة المعزولة
+        function getStorageKey() {
+            return 'chat_phone_' + (activePhone || 'none');
+        }
 
-            txt.innerText = msg;
-            if (type === 'error') {
-                icon.className = 'fa-solid fa-circle-exclamation text-rose-400';
-            } else {
-                icon.className = 'fa-solid fa-circle-info text-sky-400';
+        function loadChatHistory() {
+            const historyDiv = document.getElementById('chatHistory');
+            if (!activePhone) {
+                historyDiv.innerHTML = currentLang === 'ar' ? 'اختر شخصاً من القائمة أعلاه لفتح محادثته.' : 'Select a contact to open chat.';
+                return;
+            }
+            let history = JSON.parse(localStorage.getItem(getStorageKey()) || '[]');
+            if (history.length === 0) {
+                historyDiv.innerHTML = currentLang === 'ar' ? 'سجل المحادثة مع هذا الرقم فارغ.' : 'Chat history is empty.';
+                return;
+            }
+            historyDiv.innerHTML = history.join('<br>');
+            historyDiv.scrollTop = historyDiv.scrollHeight;
+        }
+
+        function sendChatMessage() {
+            if (!activePhone) {
+                alert(currentLang === 'ar' ? 'الرجاء اختيار جهة اتصال من القائمة أولاً.' : 'Please select a contact from the list first.');
+                return;
+            }
+            const msg = document.getElementById('chatInput').value.trim();
+            const fileInput = document.getElementById('imageInput');
+            
+            if (!msg && fileInput.files.length === 0) return;
+            
+            const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            let history = JSON.parse(localStorage.getItem(getStorageKey()) || '[]');
+
+            if (msg) {
+                history.push(`<div><b>${currentLang === 'ar' ? 'أنت' : 'You'} (${time}):</b> ${msg}</div>`);
+                document.getElementById('chatInput').value = '';
             }
 
-            box.classList.remove('hidden');
-            setTimeout(() => {
-                box.classList.add('hidden');
-            }, 3000);
+            if (fileInput.files.length > 0) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    history.push(`<div><b>${currentLang === 'ar' ? 'أنت' : 'You'} (${time}) [Image]:</b><br><img src="${e.target.result}" style="max-width: 130px; border-radius: 6px; margin-top: 4px;"></div>`);
+                    localStorage.setItem(getStorageKey(), JSON.stringify(history));
+                    loadChatHistory();
+                    fileInput.value = '';
+                };
+                reader.readAsDataURL(fileInput.files[0]);
+                return;
+            }
+
+            localStorage.setItem(getStorageKey(), JSON.stringify(history));
+            loadChatHistory();
         }
     </script>
 </body>
