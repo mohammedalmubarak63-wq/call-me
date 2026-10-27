@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>P2P Verified Phone Hub</title>
+    <title>P2P Secure Phone Hub</title>
     <style>
         :root { --bg: #0f172a; --card: #1e293b; --border: #334155; --text: #fff; --primary: #2563eb; --secondary: #059669; --danger: #dc2626; --warning: #d97706; --text-dim: #94a3b8; }
         body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); padding: 15px; margin: 0; transition: 0.3s; }
@@ -30,13 +30,15 @@
         
         .output-box { background: var(--bg); padding: 10px; border-radius: 8px; margin-top: 10px; min-height: 50px; border: 1px solid var(--border); font-size: 13px; line-height: 1.4; word-break: break-word; color: #e2e8f0; }
         
-        /* شاشة المكالمة والرنين */
-        .call-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.96); z-index: 999; flex-direction: column; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; }
-        .call-card { background: var(--card); padding: 25px; border-radius: 16px; border: 1px solid #475569; text-align: center; width: 100%; max-width: 380px; box-shadow: 0 10px 30px rgba(0,0,0,0.6); }
-        .call-card h3 { margin-top: 0; color: #38bdf8; font-size: 20px; }
+        /* شاشة المكالمة والفيديو والاقتران */
+        .call-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.98); z-index: 999; flex-direction: column; justify-content: center; align-items: center; padding: 15px; box-sizing: border-box; }
+        .call-card { background: var(--card); padding: 20px; border-radius: 16px; border: 1px solid #475569; text-align: center; width: 100%; max-width: 420px; box-shadow: 0 10px 30px rgba(0,0,0,0.7); }
+        .call-card h3 { margin-top: 0; color: #38bdf8; font-size: 18px; }
         
-        .pairing-badge { background: #0284c7; color: white; font-weight: bold; padding: 8px; border-radius: 8px; font-size: 15px; letter-spacing: 2px; margin: 10px 0; border: 1px dashed #38bdf8; }
+        .video-container { display: flex; gap: 10px; justify-content: center; margin-bottom: 12px; flex-wrap: wrap; }
+        video { width: 100%; max-height: 200px; background: #000; border-radius: 8px; object-fit: cover; display: none; }
         
+        .pairing-badge { background: #0284c7; color: white; font-weight: bold; padding: 6px; border-radius: 8px; font-size: 14px; letter-spacing: 2px; margin: 8px 0; border: 1px dashed #38bdf8; }
         .contact-item { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding: 8px 0; }
         .contact-item span { cursor: pointer; }
         .contact-item span:hover { color: #38bdf8; }
@@ -45,21 +47,21 @@
 <body>
     <div class="container">
         <div class="header-bar">
-            <h1 id="uiTitle">P2P Verified Phone Hub</h1>
+            <h1 id="uiTitle">P2P Secure Phone Hub</h1>
             <button class="lang-btn" onclick="toggleLanguage()" id="langToggleBtn">English</button>
         </div>
 
-        <!-- التوثيق والتثبيت الرقمي -->
+        <!-- التسجيل والتثبيت برقم الجوال -->
         <div class="section" id="authSection">
             <h2 id="secAuthTitle">🔐 تثبيت رقم الجوال وبصمة الجهاز</h2>
             <div id="phoneStep">
-                <label id="lblEnterPhone">أدخل رقم جوالك لتوليد بصمة الاقتران المشفرة:</label>
+                <label id="lblEnterPhone">أدخل رقم جوالك لتشغيل الهوية واتصالات P2P:</label>
                 <input type="text" id="verifyPhoneInput" placeholder="050xxxxxxxx" style="margin-bottom:8px;">
-                <button onclick="registerDeviceKey()" id="btnSendOtp">تأكيد رقم الجوال وتفعيل الهوية</button>
+                <button onclick="registerDeviceKey()" id="btnSendOtp">تأكيد رقم الجوال وبدء الاتصال</button>
             </div>
             
             <div id="verifiedBadge" style="display:none; color: #059669; font-weight: bold; font-size: 14px; text-align: center;">
-                ✅ تم تثبيت رقمك وبصمة التشفير: <span id="confirmedPhone" style="color: #38bdf8;"></span>
+                ✅ متصل بالشبكة برقم: <span id="confirmedPhone" style="color: #38bdf8;"></span>
             </div>
         </div>
 
@@ -85,8 +87,8 @@
                     </div>
                 </div>
                 <div class="controls">
-                    <button onclick="startCall('audio')" id="btnAudioCall">📞 اتصال صوتي (مع نغمة رنين)</button>
-                    <button class="secondary" onclick="startCall('video')" id="btnVideoCall">📹 اتصال فيديو</button>
+                    <button onclick="startCall('audio')" id="btnAudioCall">📞 اتصال صوتي مباشر</button>
+                    <button class="secondary" onclick="startCall('video')" id="btnVideoCall">📹 اتصال فيديو مباشر</button>
                 </div>
             </div>
 
@@ -96,25 +98,30 @@
                 <textarea id="chatInput" placeholder="اكتب رسالة..."></textarea>
                 <input type="file" id="imageInput" accept="image/*" style="margin-top: 8px;">
                 <button onclick="sendChatMessage()" style="margin-top: 8px;" id="btnSend">📤 إرسال رسالة أو صورة</button>
-                <div class="output-box" id="chatHistory" style="max-height: 160px; overflow-y: auto; margin-top: 10px;">اختر جهة اتصال بالأعلى لفتح محادثتها وسجلها الخاص...</div>
+                <div class="output-box" id="chatHistory" style="max-height: 150px; overflow-y: auto; margin-top: 10px;">اختر جهة اتصال بالأعلى لفتح محادثتها وسجلها الخاص...</div>
             </div>
         </div>
     </div>
 
-    <!-- شاشة المكالمة والتوثيق التبادلي -->
+    <!-- شاشة المكالمة والفيديو الحية -->
     <div class="call-overlay" id="callOverlay">
         <div class="call-card">
             <h3 id="callTitle">مكالمة واردة...</h3>
-            <p id="callStatusText" style="color: var(--text-dim); font-size: 13px; margin-bottom: 5px;">يرجى الانتظار...</p>
+            <p id="callStatusText" style="color: var(--text-dim); font-size: 13px; margin-bottom: 5px;">جاري الاتصال المباشر...</p>
             
+            <div class="video-container">
+                <video id="remoteVideo" autoplay playsinline></video>
+                <video id="localVideo" autoplay playsinline muted style="width: 90px; height: 70px; position: absolute; bottom: 120px; right: 25px; border: 1px solid #38bdf8;"></video>
+            </div>
+
             <div id="pairingCodeBox" style="display:none;">
-                <div style="font-size:12px; color:var(--text-dim);" id="lblPairing">رمز التوثيق التبادلي المباشر:</div>
+                <div style="font-size:12px; color:var(--text-dim);" id="lblPairing">رمز التوثيق التبادلي:</div>
                 <div class="pairing-badge" id="pairingCodeDisplay">----</div>
             </div>
             
             <div id="incomingActions" style="display:none; margin-bottom: 10px;">
                 <button class="secondary" onclick="acceptIncomingCall()" style="margin-bottom:6px;" id="btnAccept">🟢 قبول المكالمة</button>
-                <button class="warning" onclick="quickSaveCaller()" style="margin-bottom:6px;" id="btnQuickSave">➕ حفظ المتصل في جهات الاتصال</button>
+                <button class="warning" onclick="quickSaveCaller()" style="margin-bottom:6px;" id="btnQuickSave">➕ حفظ المتصل فوراً</button>
             </div>
             
             <button class="danger" onclick="endCall()" id="btnEndCall">🔴 إنهاء المكالمة</button>
@@ -130,54 +137,55 @@
         let currentCall = null;
         let incomingCallObj = null;
         let incomingCallerPhone = null;
+        let localStream = null;
 
         const translations = {
             ar: {
-                title: "P2P Verified Phone Hub",
+                title: "P2P Secure Phone Hub",
                 langBtn: "English",
                 secAuth: "🔐 تثبيت رقم الجوال وبصمة الجهاز",
-                lblPhone: "أدخل رقم جوالك لتوليد بصمة الاقتران المشفرة:",
-                sendOtp: "تأكيد رقم الجوال وتفعيل الهوية",
+                lblPhone: "أدخل رقم جوالك لتشغيل الهوية واتصالات P2P:",
+                sendOtp: "تأكيد رقم الجوال وبدء الاتصال",
                 secContacts: "👥 جهات الاتصال",
                 namePh: "اسم الشخص (مثلاً: زوجتي)",
                 phonePh: "رقم الجوال",
                 saveContact: "➕ حفظ جهة الاتصال",
                 secCall: "📞 الاتصال المباشر برقم الجوال",
                 targetPh: "أدخل رقم جوال الطرف الآخر",
-                audioCall: "📞 اتصال صوتي (مع نغمة رنين)",
-                videoCall: "📹 اتصال فيديو",
+                audioCall: "📞 اتصال صوتي مباشر",
+                videoCall: "📹 اتصال فيديو مباشر",
                 chatTitle: "💬 المحادثة الخاصة مع: ",
                 selectPrompt: "اختر شخصاً من القائمة",
                 chatPh: "اكتب رسالة...",
                 sendBtn: "📤 إرسال رسالة أو صورة",
                 noContacts: "لا توجد جهات اتصال محفوظة.",
                 acceptBtn: "🟢 قبول المكالمة",
-                quickSaveBtn: "➕ حفظ المتصل في جهات الاتصال",
+                quickSaveBtn: "➕ حفظ المتصل فوراً",
                 endCallBtn: "🔴 إنهاء المكالمة",
-                lblPairing: "رمز التوثيق التبادلي المباشر:"
+                lblPairing: "رمز التوثيق التبادلي:"
             },
             en: {
-                title: "P2P Verified Phone Hub",
+                title: "P2P Secure Phone Hub",
                 langBtn: "العربية",
                 secAuth: "🔐 Register Phone & Device Fingerprint",
-                lblPhone: "Enter phone number to generate encrypted identity:",
-                sendOtp: "Confirm Phone & Activate ID",
+                lblPhone: "Enter phone number to activate P2P ID:",
+                sendOtp: "Confirm Phone & Start Hub",
                 secContacts: "👥 Contacts",
                 namePh: "Contact Name (e.g. Wife)",
                 phonePh: "Phone Number",
                 saveContact: "➕ Save Contact",
                 secCall: "📞 Direct Phone Call",
                 targetPh: "Enter phone number to call",
-                audioCall: "📞 Audio Call (with ringtone)",
-                videoCall: "📹 Video Call",
+                audioCall: "📞 Direct Audio Call",
+                videoCall: "📹 Direct Video Call",
                 chatTitle: "💬 Private Chat with: ",
                 selectPrompt: "Select a contact from list",
                 chatPh: "Type a message...",
                 sendBtn: "📤 Send Message or Image",
                 noContacts: "No saved contacts.",
                 acceptBtn: "🟢 Accept Call",
-                quickSaveBtn: "➕ Save Caller to Contacts",
-                endCallBtn: "🔴 End Call",
+                quickSaveBtn: "➕ Save Caller Instantly",
+                endCallBtn: "End Call",
                 lblPairing: "P2P Verification Code:"
             }
         };
@@ -220,7 +228,6 @@
             loadContacts();
         });
 
-        // توليد رمز التوثيق التبادلي (Pairing Code) المشتق من أرقام الطرفين
         function generatePairingCode(phoneA, phoneB) {
             const str = [phoneA, phoneB].sort().join('-');
             let hash = 0;
@@ -249,17 +256,22 @@
             document.getElementById('mainAppContent').style.display = 'block';
 
             if (peer) peer.destroy();
-            peer = new Peer("p2p_verified_" + phone);
+            // استخدام خادم موثوق عالمياً لتمرير الإشارات بوضوح وسرعة
+            peer = new Peer("p2p_hub_" + phone, {
+                host: '0.peerjs.com',
+                port: 443,
+                secure: true
+            });
             
-            peer.on('call', (call) => {
+            peer.on('call', async (call) => {
                 incomingCallObj = call;
-                incomingCallerPhone = call.peer.replace('p2p_verified_', '');
+                incomingCallerPhone = call.peer.replace('p2p_hub_', '');
                 
                 const pairCode = generatePairingCode(myVerifiedPhone, incomingCallerPhone);
                 document.getElementById('pairingCodeDisplay').innerText = pairCode;
                 document.getElementById('pairingCodeBox').style.display = 'block';
 
-                document.getElementById('callTitle').innerText = currentLang === 'ar' ? 'مكالمة واردة' : 'Incoming Call';
+                document.getElementById('callTitle').innerText = currentLang === 'ar' ? 'مكالمة واردة...' : 'Incoming Call...';
                 document.getElementById('callStatusText').innerText = (currentLang === 'ar' ? 'من الرقم: ' : 'From: ') + incomingCallerPhone;
                 document.getElementById('incomingActions').style.display = 'block';
                 document.getElementById('callOverlay').style.display = 'flex';
@@ -347,41 +359,62 @@
             document.getElementById('pairingCodeDisplay').innerText = pairCode;
             document.getElementById('pairingCodeBox').style.display = 'block';
 
-            document.getElementById('callTitle').innerText = currentLang === 'ar' ? 'جاري الاتصال...' : 'Calling...';
+            document.getElementById('callTitle').innerText = currentLang === 'ar' ? 'جاري الاتصال المباشر...' : 'Calling...';
             document.getElementById('callStatusText').innerText = targetPhone;
             document.getElementById('incomingActions').style.display = 'none';
             document.getElementById('callOverlay').style.display = 'flex';
             startRingingSound();
 
             try {
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: type === 'video' });
-                const targetId = "p2p_verified_" + targetPhone;
-                currentCall = peer.call(targetId, stream);
+                localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: type === 'video' });
+                if (type === 'video') {
+                    const localVid = document.getElementById('localVideo');
+                    localVid.srcObject = localStream;
+                    localVid.style.display = 'block';
+                }
+
+                const targetId = "p2p_hub_" + targetPhone;
+                currentCall = peer.call(targetId, localStream);
+
                 currentCall.on('stream', (remoteStream) => {
                     stopRingingSound();
-                    document.getElementById('callStatusText').innerText = currentLang === 'ar' ? 'المكالمة نشطة (تم الاقتران بنجاح)' : 'Call Active (Paired Successfully)';
+                    document.getElementById('callStatusText').innerText = currentLang === 'ar' ? 'المكالمة نشطة الآن 🟢' : 'Call Active 🟢';
+                    const remoteVid = document.getElementById('remoteVideo');
+                    remoteVid.srcObject = remoteStream;
+                    remoteVid.style.display = 'block';
                 });
+
                 currentCall.on('close', () => { endCall(); });
             } catch (err) {
-                alert(currentLang === 'ar' ? 'تعذر الوصول للميكروفون أو الكاميرا.' : 'Media access error.');
+                alert(currentLang === 'ar' ? 'فشل الوصول للميكروفون أو الكاميرا، تأكد من الصلاحيات.' : 'Media access failed.');
                 endCall();
             }
         }
 
         async function acceptIncomingCall() {
             stopRingingSound();
-            document.getElementById('callStatusText').innerText = currentLang === 'ar' ? 'المكالمة نشطة (تم الاقتران بنجاح)' : 'Call Active (Paired Successfully)';
+            document.getElementById('callStatusText').innerText = currentLang === 'ar' ? 'جاري فتح الاتصال...' : 'Connecting...';
             document.getElementById('incomingActions').style.display = 'none';
+
             try {
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
-                incomingCallObj.answer(stream);
-                incomingCallObj.on('stream', (remoteStream) => {});
+                localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
+                const localVid = document.getElementById('localVideo');
+                localVid.srcObject = localStream;
+                localVid.style.display = 'block';
+
+                incomingCallObj.answer(localStream);
+                incomingCallObj.on('stream', (remoteStream) => {
+                    document.getElementById('callStatusText').innerText = currentLang === 'ar' ? 'المكالمة نشطة الآن 🟢' : 'Call Active 🟢';
+                    const remoteVid = document.getElementById('remoteVideo');
+                    remoteVid.srcObject = remoteStream;
+                    remoteVid.style.display = 'block';
+                });
             } catch (err) {
+                alert(currentLang === 'ar' ? 'فشل تشغيل الوسائط.' : 'Media error.');
                 endCall();
             }
         }
 
-        // ميزة الحفظ السريع للمتصل من شاشة الاستقبال مباشرة
         function quickSaveCaller() {
             if (!incomingCallerPhone) return;
             const name = prompt(currentLang === 'ar' ? `أدخل اسماً لهذا الرقم (${incomingCallerPhone}):` : `Enter name for number (${incomingCallerPhone}):`, 'متصل جديد');
@@ -391,71 +424,16 @@
             contacts.push({ name, phone: incomingCallerPhone });
             localStorage.setItem('p2p_phone_contacts', JSON.stringify(contacts));
             loadContacts();
-            alert(currentLang === 'ar' ? 'تم حفظ المتصل في جهات الاتصال بنجاح!' : 'Caller saved successfully!');
+            alert(currentLang === 'ar' ? 'تم الحفظ بنجاح!' : 'Saved successfully!');
         }
 
         function endCall() {
             stopRingingSound();
+            if (localStream) {
+                localStream.getTracks().forEach(track => track.stop());
+                localStream = null;
+            }
             if (currentCall) { currentCall.close(); currentCall = null; }
             if (incomingCallObj) { incomingCallObj.close(); incomingCallObj = null; }
-            document.getElementById('callOverlay').style.display = 'none';
-            document.getElementById('incomingActions').style.display = 'none';
-            document.getElementById('pairingCodeBox').style.display = 'none';
-        }
-
-        // المحادثة الخاصة المعزولة
-        function getStorageKey() {
-            return 'chat_phone_' + (activePhone || 'none');
-        }
-
-        function loadChatHistory() {
-            const historyDiv = document.getElementById('chatHistory');
-            if (!activePhone) {
-                historyDiv.innerHTML = currentLang === 'ar' ? 'اختر شخصاً من القائمة أعلاه لفتح محادثته.' : 'Select a contact to open chat.';
-                return;
-            }
-            let history = JSON.parse(localStorage.getItem(getStorageKey()) || '[]');
-            if (history.length === 0) {
-                historyDiv.innerHTML = currentLang === 'ar' ? 'سجل المحادثة مع هذا الرقم فارغ.' : 'Chat history is empty.';
-                return;
-            }
-            historyDiv.innerHTML = history.join('<br>');
-            historyDiv.scrollTop = historyDiv.scrollHeight;
-        }
-
-        function sendChatMessage() {
-            if (!activePhone) {
-                alert(currentLang === 'ar' ? 'الرجاء اختيار جهة اتصال من القائمة أولاً.' : 'Please select a contact from the list first.');
-                return;
-            }
-            const msg = document.getElementById('chatInput').value.trim();
-            const fileInput = document.getElementById('imageInput');
             
-            if (!msg && fileInput.files.length === 0) return;
-            
-            const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            let history = JSON.parse(localStorage.getItem(getStorageKey()) || '[]');
-
-            if (msg) {
-                history.push(`<div><b>${currentLang === 'ar' ? 'أنت' : 'You'} (${time}):</b> ${msg}</div>`);
-                document.getElementById('chatInput').value = '';
-            }
-
-            if (fileInput.files.length > 0) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    history.push(`<div><b>${currentLang === 'ar' ? 'أنت' : 'You'} (${time}) [Image]:</b><br><img src="${e.target.result}" style="max-width: 130px; border-radius: 6px; margin-top: 4px;"></div>`);
-                    localStorage.setItem(getStorageKey(), JSON.stringify(history));
-                    loadChatHistory();
-                    fileInput.value = '';
-                };
-                reader.readAsDataURL(fileInput.files[0]);
-                return;
-            }
-
-            localStorage.setItem(getStorageKey(), JSON.stringify(history));
-            loadChatHistory();
-        }
-    </script>
-</body>
-</html>
+            document.getElementById('
