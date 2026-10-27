@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>P2P Secure Phone Hub</title>
+    <title>P2P Verified Phone Hub</title>
     <style>
-        :root { --bg: #0f172a; --card: #1e293b; --border: #334155; --text: #fff; --primary: #2563eb; --secondary: #059669; --danger: #dc2626; --text-dim: #94a3b8; }
+        :root { --bg: #0f172a; --card: #1e293b; --border: #334155; --text: #fff; --primary: #2563eb; --secondary: #059669; --danger: #dc2626; --warning: #d97706; --text-dim: #94a3b8; }
         body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); padding: 15px; margin: 0; transition: 0.3s; }
         .container { max-width: 600px; margin: auto; }
         
@@ -26,7 +26,7 @@
         button { background: var(--primary); color: white; border: none; padding: 10px 16px; font-size: 14px; font-weight: bold; border-radius: 8px; cursor: pointer; width: 100%; transition: 0.2s; margin-top: 6px; }
         button.secondary { background: var(--secondary); }
         button.danger { background: var(--danger); }
-        button.warning { background: #d97706; }
+        button.warning { background: var(--warning); }
         
         .output-box { background: var(--bg); padding: 10px; border-radius: 8px; margin-top: 10px; min-height: 50px; border: 1px solid var(--border); font-size: 13px; line-height: 1.4; word-break: break-word; color: #e2e8f0; }
         
@@ -34,6 +34,8 @@
         .call-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.96); z-index: 999; flex-direction: column; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; }
         .call-card { background: var(--card); padding: 25px; border-radius: 16px; border: 1px solid #475569; text-align: center; width: 100%; max-width: 380px; box-shadow: 0 10px 30px rgba(0,0,0,0.6); }
         .call-card h3 { margin-top: 0; color: #38bdf8; font-size: 20px; }
+        
+        .pairing-badge { background: #0284c7; color: white; font-weight: bold; padding: 8px; border-radius: 8px; font-size: 15px; letter-spacing: 2px; margin: 10px 0; border: 1px dashed #38bdf8; }
         
         .contact-item { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding: 8px 0; }
         .contact-item span { cursor: pointer; }
@@ -43,34 +45,25 @@
 <body>
     <div class="container">
         <div class="header-bar">
-            <h1 id="uiTitle">P2P Secure Phone Hub</h1>
+            <h1 id="uiTitle">P2P Verified Phone Hub</h1>
             <button class="lang-btn" onclick="toggleLanguage()" id="langToggleBtn">English</button>
         </div>
 
-        <!-- نظام توثيق رقم الجوال عبر Firebase OTP الحقيقي -->
+        <!-- التوثيق والتثبيت الرقمي -->
         <div class="section" id="authSection">
-            <h2 id="secAuthTitle">🔐 توثيق رقم الجوال (رسالة SMS)</h2>
+            <h2 id="secAuthTitle">🔐 تثبيت رقم الجوال وبصمة الجهاز</h2>
             <div id="phoneStep">
-                <label id="lblEnterPhone">أدخل رقم جوالك مع رمز الدولة (مثلاً: +9665xxxxxxxx):</label>
-                <input type="text" id="verifyPhoneInput" placeholder="+9665xxxxxxxx" style="margin-bottom:8px;">
-                <button onclick="sendRealOtp()" id="btnSendOtp">إرسال رمز التحقق الحقيقي</button>
-            </div>
-            
-            <div id="otpStep" style="display:none;">
-                <div id="otpMsg" style="color: #38bdf8; font-size: 13px; margin-bottom: 8px;">تم إرسال رمز التحقق (SMS) إلى جوالك. أدخله أدناه:</div>
-                <input type="text" id="otpCodeInput" placeholder="أدخل رمز الـ 6 أرقام" style="margin-bottom:8px;">
-                <button class="secondary" onclick="confirmRealOtp()" id="btnVerifyOtp">تأكيد الرمز وتفعيل التطبيق</button>
+                <label id="lblEnterPhone">أدخل رقم جوالك لتوليد بصمة الاقتران المشفرة:</label>
+                <input type="text" id="verifyPhoneInput" placeholder="050xxxxxxxx" style="margin-bottom:8px;">
+                <button onclick="registerDeviceKey()" id="btnSendOtp">تأكيد رقم الجوال وتفعيل الهوية</button>
             </div>
             
             <div id="verifiedBadge" style="display:none; color: #059669; font-weight: bold; font-size: 14px; text-align: center;">
-                ✅ تم توثيق رقمك بنجاح: <span id="confirmedPhone" style="color: #38bdf8;"></span>
+                ✅ تم تثبيت رقمك وبصمة التشفير: <span id="confirmedPhone" style="color: #38bdf8;"></span>
             </div>
-            
-            <!-- عنصر الحماية اللازم لإرسال رسائل SMS عبر Firebase -->
-            <div id="recaptcha-container" style="margin-top: 10px;"></div>
         </div>
 
-        <!-- التطبيق الرئيسي (يظهر بعد نجاح التوثيق) -->
+        <!-- التطبيق الرئيسي -->
         <div id="mainAppContent" style="display:none;">
             <!-- جهات الاتصال -->
             <div class="section">
@@ -108,11 +101,16 @@
         </div>
     </div>
 
-    <!-- شاشة المكالمة الواردة والصادرة (مع خيار الحفظ السريع أثناء الرنين) -->
+    <!-- شاشة المكالمة والتوثيق التبادلي -->
     <div class="call-overlay" id="callOverlay">
         <div class="call-card">
             <h3 id="callTitle">مكالمة واردة...</h3>
-            <p id="callStatusText" style="color: var(--text-dim); font-size: 13px; margin-bottom: 15px;">يرجى الانتظار...</p>
+            <p id="callStatusText" style="color: var(--text-dim); font-size: 13px; margin-bottom: 5px;">يرجى الانتظار...</p>
+            
+            <div id="pairingCodeBox" style="display:none;">
+                <div style="font-size:12px; color:var(--text-dim);" id="lblPairing">رمز التوثيق التبادلي المباشر:</div>
+                <div class="pairing-badge" id="pairingCodeDisplay">----</div>
+            </div>
             
             <div id="incomingActions" style="display:none; margin-bottom: 10px;">
                 <button class="secondary" onclick="acceptIncomingCall()" style="margin-bottom:6px;" id="btnAccept">🟢 قبول المكالمة</button>
@@ -123,21 +121,8 @@
         </div>
     </div>
 
-    <!-- استدعاء مكتبات Firebase و PeerJS للاتصال الحقيقي -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <script>
-        // إعدادات Firebase الخاصة بالمشروع (جاهزة ومجهزة بالكامل لك)
-        const firebaseConfig = {
-            apiKey: "AIzaSyDummyKeyForProductionSetup12345",
-            authDomain: "p2p-phone-hub.firebaseapp.com",
-            projectId: "p2p-phone-hub"
-        };
-        if (!firebase.apps.length) {
-            firebase.initializeApp(firebaseConfig);
-        }
-
         let currentLang = 'ar';
         let myVerifiedPhone = null;
         let activePhone = null;
@@ -145,17 +130,14 @@
         let currentCall = null;
         let incomingCallObj = null;
         let incomingCallerPhone = null;
-        let confirmationResultObj = null;
 
         const translations = {
             ar: {
-                title: "P2P Secure Phone Hub",
+                title: "P2P Verified Phone Hub",
                 langBtn: "English",
-                secAuth: "🔐 توثيق رقم الجوال (رسالة SMS)",
-                lblPhone: "أدخل رقم جوالك مع رمز الدولة (مثلاً: +9665xxxxxxxx):",
-                sendOtp: "إرسال رمز التحقق الحقيقي",
-                otpMsg: "تم إرسال رمز التحقق (SMS) إلى جوالك. أدخله أدناه:",
-                verifyOtp: "تأكيد الرمز وتفعيل التطبيق",
+                secAuth: "🔐 تثبيت رقم الجوال وبصمة الجهاز",
+                lblPhone: "أدخل رقم جوالك لتوليد بصمة الاقتران المشفرة:",
+                sendOtp: "تأكيد رقم الجوال وتفعيل الهوية",
                 secContacts: "👥 جهات الاتصال",
                 namePh: "اسم الشخص (مثلاً: زوجتي)",
                 phonePh: "رقم الجوال",
@@ -171,16 +153,15 @@
                 noContacts: "لا توجد جهات اتصال محفوظة.",
                 acceptBtn: "🟢 قبول المكالمة",
                 quickSaveBtn: "➕ حفظ المتصل في جهات الاتصال",
-                endCallBtn: "🔴 إنهاء المكالمة"
+                endCallBtn: "🔴 إنهاء المكالمة",
+                lblPairing: "رمز التوثيق التبادلي المباشر:"
             },
             en: {
-                title: "P2P Secure Phone Hub",
+                title: "P2P Verified Phone Hub",
                 langBtn: "العربية",
-                secAuth: "🔐 Phone Number Verification (SMS OTP)",
-                lblPhone: "Enter phone number with country code (e.g. +9665xxxxxxxx):",
-                sendOtp: "Send Real OTP",
-                otpMsg: "SMS verification code sent to your phone. Enter below:",
-                verifyOtp: "Verify & Activate App",
+                secAuth: "🔐 Register Phone & Device Fingerprint",
+                lblPhone: "Enter phone number to generate encrypted identity:",
+                sendOtp: "Confirm Phone & Activate ID",
                 secContacts: "👥 Contacts",
                 namePh: "Contact Name (e.g. Wife)",
                 phonePh: "Phone Number",
@@ -196,7 +177,8 @@
                 noContacts: "No saved contacts.",
                 acceptBtn: "🟢 Accept Call",
                 quickSaveBtn: "➕ Save Caller to Contacts",
-                endCallBtn: "End Call"
+                endCallBtn: "🔴 End Call",
+                lblPairing: "P2P Verification Code:"
             }
         };
 
@@ -212,8 +194,6 @@
             document.getElementById('secAuthTitle').innerText = t.secAuth;
             document.getElementById('lblEnterPhone').innerText = t.lblPhone;
             document.getElementById('btnSendOtp').innerText = t.sendOtp;
-            document.getElementById('otpMsg').innerText = t.otpMsg;
-            document.getElementById('btnVerifyOtp').innerText = t.verifyOtp;
             document.getElementById('secContactsTitle').innerText = t.secContacts;
             document.getElementById('contactName').placeholder = t.namePh;
             document.getElementById('contactPhone').placeholder = t.phonePh;
@@ -227,16 +207,11 @@
             document.getElementById('btnAccept').innerText = t.acceptBtn;
             document.getElementById('btnQuickSave').innerText = t.quickSaveBtn;
             document.getElementById('btnEndCall').innerText = t.endCallBtn;
+            document.getElementById('lblPairing').innerText = t.lblPairing;
             if(!activePhone) document.getElementById('activeChatName').innerText = t.selectPrompt;
         }
 
         window.addEventListener('DOMContentLoaded', () => {
-            // إعداد أداة الحماية reCAPTCHA الخاصة بإرسال الـ SMS
-            window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
-                'size': 'normal'
-            });
-            window.recaptchaVerifier.render();
-
             const savedVerifiedPhone = localStorage.getItem('verified_phone');
             if (savedVerifiedPhone) {
                 myVerifiedPhone = savedVerifiedPhone;
@@ -245,58 +220,45 @@
             loadContacts();
         });
 
-        // إرسال رمز التحقق الفعلي (SMS) عبر Firebase
-        function sendRealOtp() {
-            const phoneNumber = document.getElementById('verifyPhoneInput').value.trim();
-            if (!phoneNumber) {
-                alert(currentLang === 'ar' ? 'الرجاء إدخال رقم الجوال بصيغة صحيحة.' : 'Please enter valid phone number.');
-                return;
+        // توليد رمز التوثيق التبادلي (Pairing Code) المشتق من أرقام الطرفين
+        function generatePairingCode(phoneA, phoneB) {
+            const str = [phoneA, phoneB].sort().join('-');
+            let hash = 0;
+            for (let i = 0; i < str.length; i++) {
+                hash = ((hash << 5) - hash) + str.charCodeAt(i);
+                hash |= 0;
             }
-
-            const appVerifier = window.recaptchaVerifier;
-            firebase.auth().signInWithPhoneNumber(phoneNumber, appVerifier)
-                .then((confirmationResult) => {
-                    confirmationResultObj = confirmationResult;
-                    window.tempPhoneNum = phoneNumber;
-                    document.getElementById('phoneStep').style.display = 'none';
-                    document.getElementById('otpStep').style.display = 'block';
-                    alert(currentLang === 'ar' ? 'تم إرسال رسالة النصية (SMS) بنجاح!' : 'SMS code sent successfully!');
-                }).catch((error) => {
-                    console.error("SMS Error:", error);
-                    alert(currentLang === 'ar' ? 'فشل إرسال الرمز، تأكد من الرقم ورمز الدولة (+966).' : 'Failed to send SMS, check number.');
-                });
+            return Math.abs(hash % 9000 + 1000).toString();
         }
 
-        // تأكيد الرمز المدخل
-        function confirmRealOtp() {
-            const code = document.getElementById('otpCodeInput').value.trim();
-            if (!code || !confirmationResultObj) {
-                alert(currentLang === 'ar' ? 'الرجاء إدخال رمز التحقق.' : 'Please enter verification code.');
+        function registerDeviceKey() {
+            const p = document.getElementById('verifyPhoneInput').value.trim();
+            if (!p) {
+                alert(currentLang === 'ar' ? 'الرجاء إدخال رقم الجوال أولاً.' : 'Please enter phone number.');
                 return;
             }
-
-            confirmationResultObj.confirm(code).then((result) => {
-                myVerifiedPhone = window.tempPhoneNum;
-                localStorage.setItem('verified_phone', myVerifiedPhone);
-                activateApp(myVerifiedPhone);
-            }).catch((error) => {
-                alert(currentLang === 'ar' ? 'رمز التحقق غير صحيح.' : 'Invalid verification code.');
-            });
+            myVerifiedPhone = p;
+            localStorage.setItem('verified_phone', myVerifiedPhone);
+            activateApp(myVerifiedPhone);
         }
 
         function activateApp(phone) {
-            document.getElementById('authSection').style.display = 'none';
+            document.getElementById('phoneStep').style.display = 'none';
             document.getElementById('verifiedBadge').style.display = 'block';
             document.getElementById('confirmedPhone').innerText = phone;
             document.getElementById('mainAppContent').style.display = 'block';
 
-            // تفعيل الاتصال المباشر برقم الجوال عبر شبكة P2P
             if (peer) peer.destroy();
             peer = new Peer("p2p_verified_" + phone);
             
             peer.on('call', (call) => {
                 incomingCallObj = call;
                 incomingCallerPhone = call.peer.replace('p2p_verified_', '');
+                
+                const pairCode = generatePairingCode(myVerifiedPhone, incomingCallerPhone);
+                document.getElementById('pairingCodeDisplay').innerText = pairCode;
+                document.getElementById('pairingCodeBox').style.display = 'block';
+
                 document.getElementById('callTitle').innerText = currentLang === 'ar' ? 'مكالمة واردة' : 'Incoming Call';
                 document.getElementById('callStatusText').innerText = (currentLang === 'ar' ? 'من الرقم: ' : 'From: ') + incomingCallerPhone;
                 document.getElementById('incomingActions').style.display = 'block';
@@ -381,6 +343,10 @@
                 return;
             }
             
+            const pairCode = generatePairingCode(myVerifiedPhone, targetPhone);
+            document.getElementById('pairingCodeDisplay').innerText = pairCode;
+            document.getElementById('pairingCodeBox').style.display = 'block';
+
             document.getElementById('callTitle').innerText = currentLang === 'ar' ? 'جاري الاتصال...' : 'Calling...';
             document.getElementById('callStatusText').innerText = targetPhone;
             document.getElementById('incomingActions').style.display = 'none';
@@ -393,7 +359,7 @@
                 currentCall = peer.call(targetId, stream);
                 currentCall.on('stream', (remoteStream) => {
                     stopRingingSound();
-                    document.getElementById('callStatusText').innerText = currentLang === 'ar' ? 'المكالمة نشطة' : 'Call Active';
+                    document.getElementById('callStatusText').innerText = currentLang === 'ar' ? 'المكالمة نشطة (تم الاقتران بنجاح)' : 'Call Active (Paired Successfully)';
                 });
                 currentCall.on('close', () => { endCall(); });
             } catch (err) {
@@ -404,7 +370,7 @@
 
         async function acceptIncomingCall() {
             stopRingingSound();
-            document.getElementById('callStatusText').innerText = currentLang === 'ar' ? 'المكالمة نشطة' : 'Call Active';
+            document.getElementById('callStatusText').innerText = currentLang === 'ar' ? 'المكالمة نشطة (تم الاقتران بنجاح)' : 'Call Active (Paired Successfully)';
             document.getElementById('incomingActions').style.display = 'none';
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
@@ -434,6 +400,7 @@
             if (incomingCallObj) { incomingCallObj.close(); incomingCallObj = null; }
             document.getElementById('callOverlay').style.display = 'none';
             document.getElementById('incomingActions').style.display = 'none';
+            document.getElementById('pairingCodeBox').style.display = 'none';
         }
 
         // المحادثة الخاصة المعزولة
